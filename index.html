@@ -3,49 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOS V22: ULTIMATE NEON</title>
+    <title>PROTOS V22.1: COMMERCIAL EDITION</title>
     <style>
         :root { --bg: #050505; --color: #00ff41; --accent: #ff003c; --shadow: rgba(0, 255, 65, 0.2); }
         * { box-sizing: border-box; }
         body { background: var(--bg); color: var(--color); font-family: 'Consolas', 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-
-        /* Эффект старого монитора */
         body::before { content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none; }
-        
         .window { width: 95%; max-width: 1000px; height: 92vh; border: 1px solid var(--color); background: rgba(0,0,0,0.8); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px var(--shadow); transition: all 0.15s ease-in-out; z-index: 10; }
-        
-        /* Анимация глитча при тряске */
         .shaking { animation: shake 0.15s infinite; border-color: var(--accent) !important; box-shadow: 0 0 40px var(--accent) !important; filter: hue-rotate(90deg); }
         @keyframes shake { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, 1px); } }
-
         h2 { background: var(--color); color: #000; margin: 0; padding: 10px 15px; font-size: 0.9em; letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center; }
-        
-        #chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--color) transparent; }
+        #chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
         #chat-box::-webkit-scrollbar { width: 4px; }
         #chat-box::-webkit-scrollbar-thumb { background: var(--color); }
-
         .msg { margin-bottom: 20px; animation: fadeIn 0.3s ease; line-height: 1.5; border-left: 2px solid transparent; padding-left: 10px; }
         .msg.user { border-left-color: #0af; }
         .msg.proto { border-left-color: var(--color); }
+        .msg.system { border-left-color: var(--accent); color: var(--accent); font-style: italic; font-size: 0.8em; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
         .proto-name { color: var(--color); font-weight: bold; text-transform: uppercase; margin-right: 8px; }
         .user-name { color: #0af; font-weight: bold; margin-right: 8px; }
-
-        .gen-img { max-width: 100%; border: 1px solid var(--color); margin: 15px 0; box-shadow: 0 0 15px var(--color); transition: 0.3s; cursor: crosshair; }
-        .gen-img:hover { transform: scale(1.02); }
-
-        #preview-area { display: none; padding: 10px; background: #111; border-top: 1px solid var(--color); position: relative; }
+        .gen-img { max-width: 100%; border: 1px solid var(--color); margin: 15px 0; box-shadow: 0 0 15px var(--color); transition: 0.3s; }
+        #preview-area { display: none; padding: 10px; background: #111; border-top: 1px solid var(--color); position: relative; text-align: center; }
         #preview-media { max-height: 120px; border: 1px solid var(--color); }
-
         .input-area { display: flex; gap: 10px; padding: 15px; background: #000; border-top: 1px solid var(--color); align-items: center; }
-        input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 12px; font-family: inherit; outline: none; box-shadow: inset 0 0 5px var(--shadow); }
-        
+        input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 12px; font-family: inherit; outline: none; }
         .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); padding: 10px 15px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.2s; text-transform: uppercase; font-size: 0.8em; }
         .btn-ui:hover { background: var(--color); color: #000; box-shadow: 0 0 15px var(--color); }
+        .btn-ui:disabled { opacity: 0.3; cursor: not-allowed; }
         #recBtn.active { background: var(--accent); color: #fff; border-color: var(--accent); animation: pulse 0.8s infinite; }
         @keyframes pulse { 50% { box-shadow: 0 0 20px var(--accent); } }
-
         #settings-panel { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 2px solid var(--color); padding: 30px; z-index: 100; box-shadow: 0 0 100px #000; width: 350px; }
     </style>
 </head>
@@ -53,7 +40,7 @@
 
     <div id="main-window" class="window">
         <h2>
-            <span>SYSTEM // PROTOS_V22 // STATUS: ACTIVE</span>
+            <span>[ SYSTEM // PROTOS_V22.1 ]</span>
             <div class="controls">
                 <button class="btn-ui" style="border-color:#fff; color:#fff;" onclick="toggleSettings()">CONFIG</button>
                 <button class="btn-ui" style="border-color:var(--accent); color:var(--accent);" onclick="resetCore()">PURGE</button>
@@ -70,11 +57,10 @@
                 <span>ELEVENLABS_API:</span> <input type="password" id="elKey" placeholder="KEY_HERE" onchange="updateConfig()">
                 <span>VOICE_ID:</span> <input type="text" id="elVoice" placeholder="ID_HERE" onchange="updateConfig()">
             </div>
-            <button class="btn-ui" style="width:100%; margin-top:20px;" onclick="toggleSettings()">CLOSE</button>
+            <button class="btn-ui" style="width:100%; margin-top:20px;" onclick="toggleSettings()">SAVE</button>
         </div>
 
         <div id="chat-box"></div>
-        
         <div id="preview-area">
             <div id="media-content"></div>
             <button onclick="clearMedia()" style="position:absolute; top:5px; right:5px; background:var(--accent); border:none; color:#fff; cursor:pointer;">[X]</button>
@@ -83,8 +69,8 @@
         <div class="input-area">
             <label class="btn-ui" style="font-size:1.2em;">📎<input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)"></label>
             <button id="recBtn" class="btn-ui" onclick="toggleRec()">REC</button>
-            <input type="text" id="userInput" placeholder="ENTER COMMAND OR DATA..." onkeypress="if(event.key==='Enter') send()">
-            <button class="btn-ui" onclick="send()">EXECUTE</button>
+            <input type="text" id="userInput" placeholder="ENTER DATA..." onkeypress="if(event.key==='Enter') send()">
+            <button id="exeBtn" class="btn-ui" onclick="send()">EXECUTE</button>
         </div>
     </div>
 
@@ -92,9 +78,10 @@
         let memory = JSON.parse(localStorage.getItem('p_mem')) || [];
         let config = JSON.parse(localStorage.getItem('p_cfg')) || { fg:'#00ff41', vIdx:0, vox:true, elKey:'', elVoice:'' };
         let currentFileData = null;
+        let voices = [];
         const win = document.getElementById('main-window');
 
-        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Core initialization complete. Waiting for user input...'); };
+        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Core stabilized. Encryption active.'); };
 
         function applyUI() {
             document.documentElement.style.setProperty('--color', config.fg);
@@ -109,24 +96,21 @@
             applyUI(); localStorage.setItem('p_cfg', JSON.stringify(config));
         }
 
-        // --- ГЕНЕРАТОР ГЛИТЧА ---
         function triggerGlitch(duration) {
             win.classList.add('shaking');
             setTimeout(() => win.classList.remove('shaking'), duration);
         }
 
-        // --- ГОЛОС (REC) ---
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let rec = SpeechRec ? new SpeechRec() : null;
         if(rec) {
             rec.lang = 'ru-RU';
-            rec.onstart = () => document.getElementById('recBtn').classList.add('active');
+            rec.onstart = () => { document.getElementById('recBtn').classList.add('active'); triggerGlitch(300); };
             rec.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
             rec.onend = () => document.getElementById('recBtn').classList.remove('active');
         }
-        function toggleRec() { if(rec) rec.start(); else alert("Voice not supported"); }
+        function toggleRec() { if(rec) try { rec.start(); } catch(e) {} else alert("Voice not supported"); }
 
-        // --- ФАЙЛЫ ---
         function handleFile(input) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -138,25 +122,26 @@
         }
         function clearMedia() { currentFileData = null; document.getElementById('preview-area').style.display = 'none'; }
 
-        // --- SEND ---
         async function send() {
             const input = document.getElementById('userInput');
+            const btn = document.getElementById('exeBtn');
             const val = input.value.trim();
             if(!val && !currentFileData) return;
 
-            addMessage('YOU', val);
+            addMessage('YOU', val || "[IMAGE_QUERY]");
             input.value = "";
+            btn.disabled = true;
             triggerGlitch(500);
 
             if(val.toLowerCase().includes('нарисуй')) {
                 const prompt = val.replace(/нарисуй/gi, '').trim();
-                const genUrl = `https://pollinations.ai{encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random()*999)}&model=flux`;
-                addMessage('PROTOS', `Generating visualization for: "${prompt}"...`);
+                const genUrl = `https://pollinations.ai{encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random()*9999)}&model=flux`;
+                addMessage('PROTOS', `GENERATING: ${prompt}`);
                 const img = document.createElement('img');
                 img.className = 'gen-img';
                 img.src = genUrl;
                 document.getElementById('chat-box').appendChild(img);
-                img.onload = () => { triggerGlitch(200); document.getElementById('chat-box').scrollTop = 99999; };
+                img.onload = () => { btn.disabled = false; document.getElementById('chat-box').scrollTop = 99999; };
                 return;
             }
 
@@ -166,21 +151,28 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         messages: [
-                            {role: "system", content: "Ты Протос, элитный киберпанк ИИ. Отвечай кратко, технично, на русском."},
+                            {role: "system", content: "Ты Протос, киберпанк ИИ. Отвечай кратко."},
                             ...memory,
-                            {role: "user", content: currentFileData ? [{type: "text", text: val}, {type: "image_url", image_url: {url: currentFileData}}] : val}
+                            {role: "user", content: currentFileData ? [{type: "text", text: val || "Describe this"}, {type: "image_url", image_url: {url: currentFileData}}] : val}
                         ],
                         model: "openai"
                     })
                 });
+
                 const answer = await res.text();
-                addMessage('PROTOS', answer);
-                speak(answer);
-                clearMedia();
-                memory.push({role: "user", content: val}, {role: "assistant", content: answer});
-                if(memory.length > 10) memory.splice(0,2);
-                localStorage.setItem('p_mem', JSON.stringify(memory));
-            } catch(e) { addMessage('SYSTEM', 'CONNECTION ERROR.'); }
+                if(answer.includes('{"error"') || !res.ok) {
+                    addMessage('SYSTEM', 'OVERLOAD: Слишком много запросов. Ждите 5 сек.');
+                } else {
+                    addMessage('PROTOS', answer);
+                    speak(answer);
+                    memory.push({role: "user", content: val}, {role: "assistant", content: answer});
+                    if(memory.length > 10) memory.splice(0,2);
+                    localStorage.setItem('p_mem', JSON.stringify(memory));
+                }
+            } catch(e) { addMessage('SYSTEM', 'SIGNAL_LOST.'); }
+            
+            setTimeout(() => { btn.disabled = false; }, 2000);
+            clearMedia();
         }
 
         function addMessage(s, t) {
@@ -205,18 +197,18 @@
             }
             window.speechSynthesis.cancel();
             const m = new SpeechSynthesisUtterance(t);
-            m.voice = window.speechSynthesis.getVoices()[config.vIdx];
+            m.voice = voices[config.vIdx];
             window.speechSynthesis.speak(m);
         }
 
         function loadVoices() {
-            const v = window.speechSynthesis.getVoices();
-            document.getElementById('voiceSelect').innerHTML = v.map((v, i) => `<option value="${i}">${v.name}</option>`).join('');
+            voices = window.speechSynthesis.getVoices();
+            document.getElementById('voiceSelect').innerHTML = voices.map((v, i) => `<option value="${i}">${v.name}</option>`).join('');
         }
         window.speechSynthesis.onvoiceschanged = loadVoices;
         function toggleSettings() { const p = document.getElementById('settings-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
         function toggleVox() { config.vox = !config.vox; updateConfig(); }
-        function resetCore() { if(confirm("PURGE MEMORY?")) { localStorage.clear(); location.reload(); } }
+        function resetCore() { if(confirm("RESET CORE?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
