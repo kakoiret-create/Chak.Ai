@@ -1,72 +1,49 @@
-<!-- ... (весь ваш CSS остается без изменений) ... -->
-
-    <script>
         const i18n = {
             ru: { system: "Система готова.", warn: "ОГРАНИЧЕНО", proto: "Ответ:", input: "Команда...", set: "НАСТРОЙКИ", lang: "ЯЗЫК", mode: "РЕЖИМ", color: "ЦВЕТ", bg: "ОБОИ", close: "ЗАКРЫТЬ", speech: "ru-RU" },
             en: { system: "System online.", warn: "RESTRICTED", proto: "Response:", input: "Command...", set: "SETTINGS", lang: "LANGUAGE", mode: "MODE", color: "COLOR", bg: "WALLPAPER", close: "CLOSE", speech: "en-US" }
-            // ... другие языки из вашего кода
-        };
-
-        // База знаний бота
-        const responses = {
-            ru: {
-                hello: "Приветствую. Ядро PROTOS активно.",
-                howareyou: "Все системы функционируют в штатном режиме. Поток данных стабилен.",
-                whoareyou: "Я — PROTOS V26.3, стандартный интерфейс управления.",
-                unknown: "Запрос не распознан. Ожидаю валидную команду."
-            },
-            en: {
-                hello: "Greetings. PROTOS core is active.",
-                howareyou: "All systems operational. Data stream is stable.",
-                whoareyou: "I am PROTOS V26.3, standard core interface.",
-                unknown: "Unknown request. Awaiting valid command."
-            }
         };
 
         let config = JSON.parse(localStorage.getItem('p_cfg')) || { 
             lang: 'ru', fg:'#00ff41', mode:'safe', pitch: 1, bgImg: '' 
         };
 
-        window.onload = () => { applyUI(); addMessage('SYSTEM', i18n[config.lang].system); };
-
-        // Улучшенная функция отправки
-        function send() {
-            const input = document.getElementById('userInput');
-            const val = input.value.trim().toLowerCase();
-            if (!val) return;
-
-            // 1. Отображаем сообщение пользователя
-            addMessage('USER', input.value);
-            input.value = '';
-
-            // 2. Логика ответа (убираем зеркалирование)
-            let reply = "";
-            const lang = config.lang;
-
-            if (val.includes("привет")) reply = responses[lang].hello;
-            else if (val.includes("как дела") || val.includes("статус")) reply = responses[lang].howareyou;
-            else if (val.includes("кто ты")) reply = responses[lang].whoareyou;
-            else reply = responses[lang].unknown;
-
-            // 3. Задержка для имитации "раздумий"
-            setTimeout(() => {
-                addMessage('PROTO', `${i18n[lang].proto} ${reply}`);
-                speak(reply); // Озвучка, если нужно
-            }, 400);
-        }
+        window.onload = () => { 
+            applyUI(); 
+            addMessage('SYSTEM', i18n[config.lang].system); 
+        };
 
         function addMessage(sender, text) {
             const box = document.getElementById('chat-box');
             const div = document.createElement('div');
-            div.className = `msg ${sender.toLowerCase()}`;
+            div.className = `msg ${sender.toLowerCase() === 'user' ? 'user' : ''}`;
             div.innerHTML = `[${sender}] ${text}`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
 
-        function applyUI() {
-            document.documentElement.style.setProperty('--color', config.fg);
-            document.body.style.backgroundImage = config.bgImg ? `url(${config.bgImg})` : 'none';
+        // ГЛАВНОЕ: Убираем зеркалирование здесь
+        function send() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if(!text) return;
+
+            addMessage('USER', text);
+            input.value = '';
+
+            const lowText = text.toLowerCase();
+            let reply = "";
+
+            // Логика ответов
+            if(lowText.includes("привет")) reply = "Ядро PROTOS приветствует тебя.";
+            else if(lowText.includes("как дела")) reply = "Все системы в норме. Нагрузка на ЦП 2%.";
+            else if(lowText.includes("время")) reply = new Date().toLocaleTimeString();
+            else if(lowText.includes("кто ты")) reply = "Я — терминал управления PROTOS V26.3.";
+            else reply = "Запрос не распознан. Требуется уточнение.";
+
+            setTimeout(() => {
+                addMessage('PROTO', reply);
+                speak(reply);
+            }, 500);
         }
 
         function speak(text) {
@@ -76,5 +53,23 @@
             window.speechSynthesis.speak(msg);
         }
 
-        // ... функции настроек (toggleSettings, updateConfig и т.д. - оставить ваши)
-    </script>
+        function applyUI() {
+            document.documentElement.style.setProperty('--color', config.fg);
+            if(config.bgImg) document.body.style.backgroundImage = `url(${config.bgImg})`;
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function manualColorChange(val) {
+            config.fg = val;
+            applyUI();
+            localStorage.setItem('p_cfg', JSON.stringify(config));
+        }
+
+        function resetCore() {
+            localStorage.removeItem('p_cfg');
+            location.reload();
+        }
