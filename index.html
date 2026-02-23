@@ -3,38 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>PROTOS V16: STABLE</title>
+    <title>PROTOS V16: STABLE (CORE RESET EDITION)</title>
     <style>
-        :root { --main-bg: #000; --main-color: #0f0; }
+        :root { --main-bg: #000; --main-color: #0f0; --reset-color: #f00; }
         body { background: var(--main-bg); color: var(--main-color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
         .window { width: 95%; max-width: 800px; height: 90vh; border: 2px solid var(--main-color); padding: 20px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; box-shadow: 0 0 20px var(--main-color); }
         h2 { border-bottom: 2px solid var(--main-color); padding-bottom: 10px; margin: 0; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; }
+        
         .controls { display: flex; gap: 10px; align-items: center; }
-        #voxBtn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); font-size: 0.7em; padding: 2px 8px; cursor: pointer; }
+        #voxBtn, #resetBtn { background: transparent; border: 1px solid var(--main-color); color: var(--main-color); font-size: 0.7em; padding: 4px 10px; cursor: pointer; font-family: inherit; transition: 0.3s; }
         #voxBtn.active { background: var(--main-color); color: var(--main-bg); }
+        #resetBtn { border-color: var(--reset-color); color: var(--reset-color); }
+        #resetBtn:hover { background: var(--reset-color); color: #fff; box-shadow: 0 0 10px var(--reset-color); }
+
         #chat-box { flex-grow: 1; overflow-y: auto; margin: 15px 0; padding-right: 10px; scroll-behavior: smooth; }
-        .msg { margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-        .user { opacity: 0.6; } .proto { font-weight: bold; }
+        .msg { margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; line-height: 1.4; }
+        .user { opacity: 0.6; color: #0af; } 
+        .proto { font-weight: bold; text-shadow: 0 0 5px var(--main-color); }
+        .system { color: #ff0; font-style: italic; font-size: 0.9em; }
+
         .input-area { display: flex; gap: 5px; }
         input[type="text"] { flex-grow: 1; padding: 15px; background: transparent; border: 1px solid var(--main-color); color: var(--main-color); outline: none; font-size: 16px; font-family: inherit; }
-        button { background: var(--main-color); color: var(--main-bg); border: none; padding: 0 15px; cursor: pointer; font-weight: bold; font-family: inherit; }
-        .rec-active { background: #f00 !important; color: #fff; animation: pulse 1s infinite; }
+        .btn-main { background: var(--main-color); color: var(--main-bg); border: none; padding: 0 20px; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .rec-active { background: var(--reset-color) !important; color: #fff; animation: pulse 1s infinite; }
+        
         @keyframes pulse { 50% { opacity: 0.5; } }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--main-color); }
     </style>
 </head>
 <body>
     <div class="window">
         <h2>
-            <span>[ PROTOS_V16 ]</span>
+            <span>[ PROTOS_V16_STABLE ]</span>
             <div class="controls">
+                <button id="resetBtn" onclick="resetCore()">CORE RESET</button>
                 <button id="voxBtn" onclick="toggleVox()">VOX: ON</button>
             </div>
         </h2>
         <div id="chat-box"></div>
         <div class="input-area">
-            <button id="recBtn" onclick="toggleRec()">REC</button>
-            <input type="text" id="userInput" placeholder="ВВОД..." autocomplete="off" onkeypress="if(event.key==='Enter') send()">
-            <button onclick="send()">SEND</button>
+            <button id="recBtn" class="btn-main" onclick="toggleRec()">REC</button>
+            <input type="text" id="userInput" placeholder="ВВОД ДАННЫХ..." autocomplete="off" onkeypress="if(event.key==='Enter') send()">
+            <button class="btn-main" onclick="send()">SEND</button>
         </div>
     </div>
 
@@ -47,8 +58,20 @@
 
         window.onload = () => {
             updateVoxUI();
-            addMessage('PROTOS', 'Канал связи обновлен. Ошибка 429 устранена.');
+            addMessage('SYSTEM', 'Ядро стабилизировано. Ожидание команд...');
         };
+
+        // --- СИСТЕМА СБРОСА ЯДРА ---
+        function resetCore() {
+            if (confirm("ВНИМАНИЕ: Выполнить сброс ядра? Весь контекст и история будут стерты.")) {
+                memory = [];
+                localStorage.removeItem('protos_memory');
+                chatBox.innerHTML = '';
+                window.speechSynthesis.cancel();
+                addMessage('SYSTEM', 'ЯДРО СБРОШЕНО. ПАМЯТЬ ОЧИЩЕНА.');
+                speak('Ядро сброшено. Память очищена.');
+            }
+        }
 
         function toggleVox() {
             voxEnabled = !voxEnabled;
@@ -74,7 +97,7 @@
         }
 
         function toggleRec() {
-            if (!recognition) return alert("Голос не поддерживается");
+            if (!recognition) return alert("Голос не поддерживается вашим браузером.");
             recBtn.classList.add('rec-active');
             recognition.start();
         }
@@ -84,13 +107,15 @@
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
             msg.lang = 'ru-RU';
+            msg.rate = 1.1;
             window.speechSynthesis.speak(msg);
         }
 
         function addMessage(sender, text) {
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = `<span class="${sender === 'YOU' ? 'user' : 'proto'}">[${sender}]:</span> ${text}`;
+            const roleClass = sender === 'YOU' ? 'user' : (sender === 'SYSTEM' ? 'system' : 'proto');
+            div.innerHTML = `<span class="${roleClass}">[${sender}]:</span> ${text}`;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -98,37 +123,43 @@
         async function send() {
             const input = document.getElementById('userInput');
             const val = input.value.trim();
-            if (!val || val === "undefined") return;
+            if (!val) return;
             
             addMessage('YOU', val);
             input.value = "";
 
             try {
-                // Новый, более стабильный адрес API
+                // Используем endpoint с системным промптом для стабильности
                 const response = await fetch("https://text.pollinations.ai", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        messages: [{role: "system", content: "Ты Протос. Отвечай коротко и без рекламы."}].concat(memory, [{role: "user", content: val}]),
-                        model: "openai"
+                        messages: [
+                            {role: "system", content: "Ты - Протос, продвинутый ИИ. Отвечай технично, лаконично, без лишних эмоций и рекламы. Используй русский язык."},
+                            ...memory,
+                            {role: "user", content: val}
+                        ],
+                        seed: Math.floor(Math.random() * 1000)
                     })
                 });
                 
                 let answer = await response.text();
-                // Очистка от мусора
-                if (answer.includes('{"error"')) {
-                    answer = "Сервер занят. Подожди 5 секунд и повтори.";
-                } else {
-                    answer = answer.split("---")[0].split("🌸")[0].trim();
+                
+                // Фильтрация ошибок сервера
+                if (answer.toLowerCase().includes('error') || answer.length < 1) {
+                    answer = "Критический сбой или сервер занят. Рекомендуется CORE RESET.";
                 }
 
                 addMessage('PROTOS', answer);
                 speak(answer);
 
+                // Сохранение в память
                 memory.push({role: "user", content: val}, {role: "assistant", content: answer});
-                if (memory.length > 20) memory.splice(0, 2);
+                if (memory.length > 14) memory.splice(0, 2); // Оптимизация памяти (7 диалогов)
                 localStorage.setItem('protos_memory', JSON.stringify(memory));
-            } catch (e) { addMessage('SYSTEM', "СБОЙ."); }
+            } catch (e) { 
+                addMessage('SYSTEM', "КАНАЛ СВЯЗИ ПРЕРВАН."); 
+            }
         }
     </script>
 </body>
