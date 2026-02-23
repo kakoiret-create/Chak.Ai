@@ -3,122 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOS V25: ARCHITECT</title>
+    <title>PROTOS V26: ATMOSPHERE</title>
     <style>
         :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; }
-        body { background: var(--bg); color: var(--color); font-family: 'Consolas', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        .window { width: 95%; max-width: 900px; height: 90vh; border: 1px solid var(--color); background: rgba(0,5,0,0.9); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,255,65,0.2); }
+        * { box-sizing: border-box; }
+        body { 
+            background: var(--bg); 
+            background-size: cover; 
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--color); 
+            font-family: 'Consolas', monospace; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+            transition: 0.5s ease;
+        }
+        /* Слой для затемнения фона */
+        body::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 1; }
+
+        .window { 
+            width: 95%; max-width: 900px; height: 90vh; 
+            border: 1px solid var(--color); 
+            background: rgba(0,0,0,0.8); 
+            display: flex; flex-direction: column; 
+            position: relative; 
+            box-shadow: 0 0 30px var(--color); 
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
         h2 { background: var(--color); color: #000; margin: 0; padding: 10px; font-size: 0.8em; letter-spacing: 3px; display: flex; justify-content: space-between; }
         #chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; border-bottom: 1px solid var(--color); }
         .msg { margin-bottom: 20px; line-height: 1.5; border-left: 2px solid transparent; padding-left: 10px; }
         .msg.user { border-left-color: #0af; }
-        .msg.proto { border-left-color: var(--color); }
-        .input-area { display: flex; gap: 10px; padding: 15px; background: #000; }
+        .msg.proto { border-left-color: var(--color); text-shadow: 0 0 5px var(--color); }
+        .input-area { display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.5); }
         input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 10px; font-family: inherit; outline: none; }
         .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); padding: 8px 15px; cursor: pointer; font-family: inherit; font-size: 0.75em; text-transform: uppercase; }
         .btn-ui:hover { background: var(--color); color: #000; }
-        #recBtn.active { background: var(--accent); color: #fff; border-color: var(--accent); animation: pulse 1s infinite; }
-        #settings-panel { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 2px solid var(--color); padding: 25px; z-index: 100; width: 350px; max-height: 80vh; overflow-y: auto; box-shadow: 0 0 100px #000; }
+        #settings-panel { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 2px solid var(--color); padding: 25px; z-index: 100; width: 350px; box-shadow: 0 0 100px #000; }
         .setting-item { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; }
         select, input[type="text"], input[type="password"] { background: #111; color: var(--color); border: 1px solid var(--color); font-family: inherit; padding: 3px; width: 150px; }
-        @keyframes pulse { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
     <div id="main-window" class="window">
         <h2>
-            <span>[ SYSTEM_ARCHITECT_V25 ]</span>
+            <span>[ SYSTEM_ATMOSPHERE_V26 ]</span>
             <div class="controls">
                 <button class="btn-ui" style="border-color:#fff; color:#fff" onclick="toggleSettings()">CONFIG</button>
                 <button class="btn-ui" style="border-color:var(--accent); color:var(--accent)" onclick="resetCore()">PURGE</button>
             </div>
         </h2>
         <div id="settings-panel">
-            <h3 style="text-align:center; color:var(--color); margin-top:0;">MASTER CFG</h3>
-            <div class="setting-item">BG_COLOR: <input type="color" id="bgColor" onchange="updateConfig()"></div>
-            <div class="setting-item">TEXT_COLOR: <input type="color" id="fgColor" onchange="updateConfig()"></div>
+            <h3 style="text-align:center; color:var(--color); margin-top:0;">ATMOS CFG</h3>
+            <div class="setting-item">WALLPAPER: <input type="file" id="bgInput" accept="image/*" onchange="changeWallpaper(this)" style="width:150px"></div>
             <div class="setting-item">BEHAVIOR: 
                 <select id="charSelect" onchange="updateConfig()">
-                    <option value="лаконичный и холодный ИИ">PROTOCOL</option>
-                    <option value="дружелюбный и веселый напарник">FRIENDLY</option>
-                    <option value="агрессивный и дерзкий хакер">AGGRESSIVE</option>
+                    <option value="лаконичный ИИ">PROTOCOL</option>
+                    <option value="веселый напарник">FRIENDLY</option>
+                    <option value="дерзкий хакер">AGGRESSIVE</option>
                 </select>
             </div>
-            <hr style="border:0.5px solid var(--color); opacity:0.3">
-            <div class="setting-item">VOICE_IMITATE: <button id="voxBtn" class="btn-ui" onclick="toggleVox()">ON</button></div>
-            <div class="setting-item">EL_KEY: <input type="password" id="elKey" placeholder="ElevenLabs Key" onchange="updateConfig()"></div>
+            <div class="setting-item">EL_KEY: <input type="password" id="elKey" placeholder="ElevenLabs" onchange="updateConfig()"></div>
             <div class="setting-item">VOICE_ID: <input type="text" id="elVoice" placeholder="Voice ID" onchange="updateConfig()"></div>
-            <button class="btn-ui" style="width:100%; margin-top:10px" onclick="toggleSettings()">APPLY</button>
+            <button class="btn-ui" style="width:100%; margin-top:10px" onclick="toggleSettings()">RETURN</button>
         </div>
         <div id="chat-box"></div>
         <div class="input-area">
             <button id="recBtn" class="btn-ui" onclick="toggleRec()">REC</button>
-            <input type="text" id="userInput" placeholder="ВВОД ДАННЫХ..." onkeypress="if(event.key==='Enter') send()">
+            <input type="text" id="userInput" placeholder="ВВОД..." onkeypress="if(event.key==='Enter') send()">
             <button class="btn-ui" onclick="send()">EXEC</button>
         </div>
     </div>
 
     <script>
         let memory = [];
-        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bg:'#020202', fg:'#00ff41', vox:true, char:'лаконичный и холодный ИИ', elKey:'', elVoice:'' };
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bgImg:'', fg:'#00ff41', vox:true, char:'лаконичный ИИ', elKey:'', elVoice:'' };
         
-        window.onload = () => { applyUI(); addMessage('SYSTEM', 'Core Architect V25 Online. Все модули восстановлены.'); };
+        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Core Atmosphere V26. Загрузите фон в CONFIG.'); };
+
+        function changeWallpaper(input) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imgUrl = e.target.result;
+                config.bgImg = imgUrl;
+                document.body.style.backgroundImage = `url(${imgUrl})`;
+                
+                // АНАЛИЗ ЦВЕТА (упрощенно берем средний цвет через Canvas)
+                const img = new Image();
+                img.src = imgUrl;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 1; canvas.height = 1;
+                    ctx.drawImage(img, 0, 0, 1, 1);
+                    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+                    config.fg = `rgb(${r},${g},${b})`;
+                    // Если цвет слишком темный, делаем его ярче для текста
+                    if (r + g + b < 200) config.fg = `rgb(${Math.min(r+100,255)}, ${Math.min(g+100,255)}, ${Math.min(b+100,255)})`;
+                    updateConfig();
+                };
+            };
+            reader.readAsDataURL(file);
+        }
 
         function applyUI() {
-            document.body.style.backgroundColor = config.bg;
-            document.documentElement.style.setProperty('--bg', config.bg);
+            if (config.bgImg) document.body.style.backgroundImage = `url(${config.bgImg})`;
             document.documentElement.style.setProperty('--color', config.fg);
-            document.getElementById('voxBtn').innerText = config.vox ? 'ON' : 'OFF';
             document.getElementById('charSelect').value = config.char;
-            document.getElementById('bgColor').value = config.bg;
-            document.getElementById('fgColor').value = config.fg;
             document.getElementById('elKey').value = config.elKey;
             document.getElementById('elVoice').value = config.elVoice;
         }
 
         function updateConfig() {
-            config.bg = document.getElementById('bgColor').value;
-            config.fg = document.getElementById('fgColor').value;
             config.char = document.getElementById('charSelect').value;
             config.elKey = document.getElementById('elKey').value;
             config.elVoice = document.getElementById('elVoice').value;
-            applyUI(); localStorage.setItem('p_cfg', JSON.stringify(config));
+            applyUI(); 
+            localStorage.setItem('p_cfg', JSON.stringify(config));
         }
 
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = SpeechRec ? new SpeechRec() : null;
         if(recognition) {
             recognition.lang = 'ru-RU';
-            recognition.onstart = () => document.getElementById('recBtn').classList.add('active');
             recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
-            recognition.onend = () => document.getElementById('recBtn').classList.remove('active');
         }
-        function toggleRec() { if(recognition) recognition.start(); else alert("Голос не поддерживается"); }
+        function toggleRec() { recognition ? recognition.start() : alert("No Mic"); }
 
         async function send() {
             const input = document.getElementById('userInput');
             const val = input.value.trim();
             if(!val) return;
             addMessage('YOU', val); input.value = "";
-
             try {
                 const res = await fetch("https://text.pollinations.ai", {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        messages: [{role: "system", content: `Ты Протос. Твой характер: ${config.char}.`}, ...memory, {role: "user", content: val}]
+                        messages: [{role: "system", content: `Ты Протос. Характер: ${config.char}.`}, ...memory, {role: "user", content: val}]
                     })
                 });
                 const answer = await res.text();
                 addMessage('PROTOS', answer);
-                if(config.vox) speak(answer);
+                speak(answer);
                 memory.push({role:"user", content:val}, {role:"assistant", content:answer});
-                if(memory.length > 10) memory.splice(0,2);
-            } catch(e) { addMessage('SYSTEM', 'ОШИБКА КАНАЛА.'); }
+            } catch(e) { addMessage('SYSTEM', 'ОШИБКА.'); }
         }
 
         async function speak(t) {
-            if(!config.vox) return;
-            if(config.elKey && config.elVoice) {
+            if (config.elKey && config.elVoice) {
                 try {
                     const r = await fetch(`https://api.elevenlabs.io{config.elVoice}`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json', 'xi-api-key': config.elKey },
@@ -143,8 +181,8 @@
             document.getElementById('chat-box').scrollTop = 99999;
         }
 
+        function loadVoices() {} // Системные голоса
         function toggleSettings() { const p = document.getElementById('settings-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
-        function toggleVox() { config.vox = !config.vox; updateConfig(); }
         function resetCore() { localStorage.clear(); location.reload(); }
     </script>
 </body>
