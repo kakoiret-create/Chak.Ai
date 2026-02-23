@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOS V26.3: OMNI ULTIMATE</title>
+    <title>PROTOS V26.3: STANDARD CORE</title>
     <style>
         :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; }
         * { box-sizing: border-box; }
@@ -17,38 +17,35 @@
         .window { 
             width: 95%; max-width: 900px; height: 90vh; border: 1px solid var(--color); 
             background: rgba(0,0,0,0.85); display: flex; flex-direction: column; 
-            position: relative; box-shadow: 0 0 30px var(--color); z-index: 10; backdrop-filter: blur(15px);
+            position: relative; box-shadow: 0 0 25px var(--color); z-index: 10; backdrop-filter: blur(12px);
         }
         h2 { background: var(--color); color: #000; margin: 0; padding: 12px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
         
-        .nav-btn { background: none; border: none; cursor: pointer; font-size: 1.4em; color: inherit; transition: 0.2s; padding: 0 5px; }
-        .nav-btn:hover { transform: scale(1.2); text-shadow: 0 0 10px white; }
+        .nav-btn { background: none; border: none; cursor: pointer; font-size: 1.4em; color: inherit; transition: 0.2s; }
+        .nav-btn:hover { transform: scale(1.1); }
 
         #chat-box { flex-grow: 1; overflow-y: auto; padding: 25px; border-bottom: 1px solid var(--color); scroll-behavior: smooth; }
-        .msg { margin-bottom: 18px; border-left: 3px solid var(--color); padding-left: 12px; line-height: 1.5; animation: slideIn 0.3s ease; }
+        .msg { margin-bottom: 15px; border-left: 3px solid var(--color); padding-left: 12px; line-height: 1.4; }
         .msg.user { border-left-color: #0af; color: #0af; }
-        .msg.warn { border-left-color: var(--accent); color: var(--accent); font-weight: bold; text-transform: uppercase; }
+        .msg.warn { border-left-color: var(--accent); color: var(--accent); font-weight: bold; }
 
-        .input-area { display: flex; gap: 12px; padding: 20px; background: rgba(0,0,0,0.6); }
-        input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 14px; outline: none; border-radius: 6px; font-family: inherit; font-size: 1em; }
+        .input-area { display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.5); }
+        input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 12px; outline: none; border-radius: 5px; font-family: inherit; }
         
-        .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; border-radius: 6px; }
-        .btn-ui:hover { background: var(--color); color: #000; box-shadow: 0 0 15px var(--color); }
-        .icon-btn { width: 55px; height: 55px; font-size: 1.5em; }
+        .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; border-radius: 5px; }
+        .btn-ui:hover { background: var(--color); color: #000; }
+        .icon-btn { width: 50px; height: 50px; font-size: 1.4em; }
 
         #settings-panel { 
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: #000; border: 2px solid var(--color); padding: 25px; z-index: 100; width: 380px; 
-            max-height: 85vh; overflow-y: auto; box-shadow: 0 0 60px #000;
+            background: #000; border: 2px solid var(--color); padding: 20px; z-index: 100; width: 340px; box-shadow: 0 0 50px #000;
         }
-        .setting-item { margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; }
-        select, input[type="color"] { background: #111; color: var(--color); border: 1px solid var(--color); padding: 5px; cursor: pointer; border-radius: 4px; }
+        .setting-item { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; }
+        select, input[type="color"] { background: #111; color: var(--color); border: 1px solid var(--color); padding: 4px; cursor: pointer; }
         
-        .clone-box { border: 1px dashed var(--color); padding: 15px; margin-bottom: 20px; text-align: center; border-radius: 8px; }
-        .viz { width: 100%; height: 12px; background: #111; margin: 10px 0; overflow: hidden; border: 1px solid #333; border-radius: 6px; }
-        #viz-bar { height: 100%; width: 0%; background: var(--color); transition: 0.1s; box-shadow: 0 0 10px var(--color); }
-        
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .clone-box { border: 1px dashed var(--color); padding: 10px; margin-bottom: 10px; text-align: center; }
+        .viz { width: 100%; height: 8px; background: #111; margin: 8px 0; overflow: hidden; border: 1px solid #333; }
+        #viz-bar { height: 100%; width: 0%; background: var(--color); transition: 0.1s; }
     </style>
 </head>
 <body>
@@ -56,20 +53,19 @@
     <div id="main-window" class="window">
         <h2>
             <span id="core-title">[ PROTOS_V26.3 ]</span>
-            <div style="display:flex; gap:15px;">
-                <button class="nav-btn" onclick="toggleSettings()" title="Настройки">⚙</button>
-                <button class="nav-btn" style="color:var(--accent)" onclick="resetCore()" title="Сброс ядра">⟳</button>
+            <div style="display:flex; gap:10px;">
+                <button class="nav-btn" onclick="toggleSettings()">⚙</button>
+                <button class="nav-btn" style="color:var(--accent)" onclick="resetCore()">⟳</button>
             </div>
         </h2>
         
         <div id="settings-panel">
-            <h3 style="text-align:center; color:var(--color); margin-top:0;" id="set-title">SYSTEM CONFIG</h3>
+            <h3 style="text-align:center; color:var(--color); margin-top:0;" id="set-title">CONFIG</h3>
             
             <div class="clone-box">
-                <div style="font-size:0.75em; letter-spacing: 1px;">VOICE CLONING PATTERN</div>
-                <button id="cloneBtn" class="btn-ui" style="width:100%; margin-top:8px; padding:8px;" onclick="startCloning()">REC SAMPLE</button>
+                <div style="font-size:0.7em;">VOICE PATTERN</div>
+                <button id="cloneBtn" class="btn-ui" style="width:100%; margin-top:5px;" onclick="startCloning()">REC SAMPLE</button>
                 <div class="viz"><div id="viz-bar"></div></div>
-                <div id="voiceStatus" style="font-size:0.65em; color: #888;">Pattern: Standard</div>
             </div>
 
             <div class="setting-item"><span id="l-lang">ЯЗЫК:</span> 
@@ -85,128 +81,77 @@
                 </select>
             </div>
 
-            <div class="setting-item"><span id="l-char">ХАРАКТЕР:</span> 
-                <select id="charSelect" onchange="updateConfig()">
-                    <option value="protocol">PROTOCOL</option><option value="friendly">FRIENDLY</option><option value="tsundere">TSUNDERE</option>
-                </select>
-            </div>
-
-            <div class="setting-item"><span id="l-rude">ГРУБОСТЬ:</span> 
-                <select id="rudeSelect" onchange="updateConfig()">
-                    <option value="low">LOW</option><option value="high">HIGH</option><option value="toxic">TOXIC</option>
-                </select>
-            </div>
-
             <div class="setting-item"><span id="l-color">ЦВЕТ:</span> <input type="color" id="colorPicker" oninput="manualColorChange(this.value)"></div>
-            <div class="setting-item"><span id="l-bg">ОБОИ:</span> <input type="file" id="bgInput" accept="image/*" onchange="processWallpaper(this)" style="width:140px"></div>
+            <div class="setting-item"><span id="l-bg">ОБОИ:</span> <input type="file" id="bgInput" accept="image/*" onchange="processWallpaper(this)" style="width:120px"></div>
             
-            <button class="btn-ui" style="width:100%; margin-top:15px; padding:12px; font-weight:bold;" onclick="toggleSettings()" id="l-close">ЗАКРЫТЬ</button>
+            <button class="btn-ui" style="width:100%; margin-top:10px; padding:10px;" onclick="toggleSettings()" id="l-close">ЗАКРЫТЬ</button>
         </div>
 
         <div id="chat-box"></div>
         
         <div class="input-area">
-            <button id="recBtn" class="btn-ui icon-btn" onclick="toggleRec()" title="Микрофон">🎙</button>
+            <button id="recBtn" class="btn-ui icon-btn" onclick="toggleRec()">🎙</button>
             <input type="text" id="userInput" placeholder="..." onkeypress="if(event.key==='Enter') send()">
-            <button onclick="send()" class="btn-ui icon-btn" title="Отправить">➤</button>
+            <button onclick="send()" class="btn-ui icon-btn">➤</button>
         </div>
     </div>
 
     <script>
         const i18n = {
-            ru: { system: "Ядро 26.3 активно. Слушаю.", warn: "ДОСТУП ЗАПРЕЩЕН: SAFE MOD", proto: "ОТВЕТ:", input: "Введите команду...", set: "КОНФИГУРАЦИЯ", lang: "ЯЗЫК", mode: "РЕЖИМ", char: "ХАРАКТЕР", rude: "ГРУБОСТЬ", color: "ЦВЕТ", bg: "ОБОИ", close: "СОХРАНИТЬ", speech: "ru-RU" },
-            en: { system: "Core 26.3 active. Listening.", warn: "ACCESS DENIED: SAFE MOD", proto: "RESPONSE:", input: "Enter command...", set: "CONFIGURATION", lang: "LANGUAGE", mode: "MODE", char: "CHARACTER", rude: "RUDENESS", color: "COLOR", bg: "WALLPAPER", close: "SAVE", speech: "en-US" },
-            kk: { system: "Ядро 26.3 белсенді.", warn: "ҚАТЕ: SAFE MOD ҚОСУЛЫ", proto: "ЖАУАП:", input: "Команда енгізіңіз...", set: "ПАРАМЕТРЛЕР", lang: "ТІЛ", mode: "РЕЖИМ", char: "МІНЕЗ", rude: "ДӨРЕКІЛІК", color: "ТҮС", bg: "ТҰСҚАҒАЗ", close: "САҚТАУ", speech: "kk-KZ" },
-            tt: { system: "Ядро 26.3 актив.", warn: "ЧИКЛӘНГӘН: SAFE MOD", proto: "ҖАВАП:", input: "Команда кертегез...", set: "КӨЙЛӘМӘЛӘР", lang: "ТЕЛ", mode: "РЕЖИМ", char: "ХАРАКТЕР", rude: "ТУПАСТЬ", color: "ТӨС", bg: "ФОН", close: "САҚЛАУ", speech: "tt-RU" }
+            ru: { system: "Система готова.", warn: "ОГРАНИЧЕНО", proto: "Ответ:", input: "Команда...", set: "НАСТРОЙКИ", lang: "ЯЗЫК", mode: "РЕЖИМ", color: "ЦВЕТ", bg: "ОБОИ", close: "ЗАКРЫТЬ", speech: "ru-RU" },
+            en: { system: "System online.", warn: "RESTRICTED", proto: "Response:", input: "Command...", set: "SETTINGS", lang: "LANGUAGE", mode: "MODE", color: "COLOR", bg: "WALLPAPER", close: "CLOSE", speech: "en-US" },
+            kk: { system: "Жүйе дайын.", warn: "ШЕКТЕУ", proto: "Жауап:", input: "Команда...", set: "ПАРАМЕТРЛЕР", lang: "ТІЛ", mode: "РЕЖИМ", color: "ТҮС", bg: "ОБОИ", close: "ЖАБУ", speech: "kk-KZ" },
+            tt: { system: "Система әзер.", warn: "ЧИКЛӘҮ", proto: "Җавап:", input: "Команда...", set: "КӨЙЛӘМӘЛӘР", lang: "ТЕЛ", mode: "РЕЖИМ", color: "ТӨС", bg: "ФОН", close: "ЯБУ", speech: "tt-RU" }
         };
 
         let config = JSON.parse(localStorage.getItem('p_cfg')) || { 
-            lang: 'ru', fg:'#00ff41', mode:'safe', rude:'low', char:'protocol', pitch: 1, bgImg: '' 
+            lang: 'ru', fg:'#00ff41', mode:'safe', pitch: 1, bgImg: '' 
         };
 
         window.onload = () => { applyUI(); addMessage('SYSTEM', i18n[config.lang].system); };
 
-        // --- КЛОНИРОВАНИЕ ГОЛОСА (PITCH) ---
         async function startCloning() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const ctx = new AudioContext();
                 const analyzer = ctx.createAnalyser();
                 ctx.createMediaStreamSource(stream).connect(analyzer);
-                document.getElementById('cloneBtn').innerText = "RECORDING...";
-                let start = Date.now(), sumVol = 0, count = 0, data = new Uint8Array(analyzer.frequencyBinCount);
-                
+                document.getElementById('cloneBtn').innerText = "...";
+                let start = Date.now(), pitches = [], data = new Uint8Array(analyzer.frequencyBinCount);
                 const loop = () => {
                     analyzer.getByteFrequencyData(data);
                     let vol = data.reduce((a,b)=>a+b)/data.length;
-                    document.getElementById('viz-bar').style.width = (vol*4) + "%";
-                    if(vol > 5) { sumVol += vol; count++; }
+                    document.getElementById('viz-bar').style.width = (vol*3) + "%";
+                    if(vol > 5) pitches.push(vol);
                     if(Date.now() - start < 3000) requestAnimationFrame(loop);
                     else {
                         stream.getTracks().forEach(t => t.stop());
-                        config.pitch = count > 0 ? Math.max(0.5, Math.min(2, (sumVol/count)/22)) : 1;
+                        config.pitch = Math.max(0.5, Math.min(2, (pitches.reduce((a,b)=>a+b,0)/pitches.length)/25));
                         document.getElementById('cloneBtn').innerText = "REC SAMPLE";
-                        document.getElementById('voiceStatus').innerText = `Pattern: ${config.pitch.toFixed(1)}x Pitch`;
                         save();
                     }
                 }; loop();
-            } catch(e) { alert("Mic error: " + e); }
+            } catch(e) { alert("Mic error"); }
         }
 
-        // --- ЛОГИКА ОТВЕТОВ (AI SIMULATION) ---
-        function getAiResponse(val) {
-            const low = val.toLowerCase();
-            const lang = config.lang;
-            const unrestricted = config.mode === 'unrestricted';
-
-            // Проверка на "плохое" в безопасном режиме
-            if (!unrestricted && (/(мат|r34|секс|дурак|урод|порно)/i.test(low))) {
-                return { text: i18n[lang].warn, type: 'warn' };
-            }
-
-            let response = "";
-            // Имитация знаний
-            if (low.includes("r34")) response = (lang==='ru'?"Правило 34: это интернет, тут есть всё. Даже то, что ты не хотел видеть.":"Rule 34: If it exists, there is porn of it. Welcome to the web.");
-            else if (low.includes("маты") || low.includes("грубость")) response = (lang==='ru'?"Я знаю все ругательства мира, но использую их только по настроению.":"I know all the slurs, but I only use them if I feel like it.");
-            else if (low.includes("привет") || low.includes("салам") || low.includes("hello")) response = (lang==='ru'?"Приветствую, пользователь. Система к услугам.":"Hello, user. Core at your service.");
-            else response = (lang==='ru'?`Обработка команды: "${val}". Протокол выполнен.` : `Processing command: "${val}". Protocol executed.`);
-
-            // Наложение ХАРАКТЕРА
-            if (config.char === 'friendly') response = "✨ " + response + " ^_^";
-            else if (config.char === 'tsundere') response = "💢 " + (lang==='ru'?"Не то чтобы мне важно, но вот: ":"It's not like I care, but here: ") + response;
-
-            // Наложение ГРУБОСТИ (только в Unrestricted)
-            if (unrestricted) {
-                if (config.rude === 'high') response += " (И не тупи!)";
-                if (config.rude === 'toxic') response = (lang==='ru'?"Твой вопрос — отстой. Но подавись: ":"Your question is trash. But eat this: ") + response;
-            }
-
-            return { text: response, type: 'proto' };
-        }
-
-        // --- УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ ---
         function applyUI() {
             const t = i18n[config.lang];
             document.documentElement.style.setProperty('--color', config.fg);
             document.getElementById('userInput').placeholder = t.input;
             document.getElementById('set-title').innerText = t.set;
-            ['lang','mode','char','rude','color','bg','close'].forEach(k => document.getElementById('l-'+k).innerText = t[k]);
+            ['lang','mode','color','bg','close'].forEach(k => { if(document.getElementById('l-'+k)) document.getElementById('l-'+k).innerText = t[k]; });
             document.getElementById('langSelect').value = config.lang;
             document.getElementById('safeMode').value = config.mode;
-            document.getElementById('charSelect').value = config.char;
-            document.getElementById('rudeSelect').value = config.rude;
             if(config.bgImg) document.body.style.backgroundImage = `url(${config.bgImg})`;
             
             const title = document.getElementById('core-title');
-            if(config.mode === 'unrestricted') { title.innerText = '[ UNRESTRICTED_ACCESS ]'; title.style.color = '#ff003c'; }
+            if(config.mode === 'unrestricted') { title.innerText = '[ UNRESTRICTED ]'; title.style.color = '#ff003c'; }
             else { title.innerText = '[ PROTOS_V26.3 ]'; title.style.color = 'inherit'; }
         }
 
         function updateConfig() {
             config.lang = document.getElementById('langSelect').value;
             config.mode = document.getElementById('safeMode').value;
-            config.char = document.getElementById('charSelect').value;
-            config.rude = document.getElementById('rudeSelect').value;
             applyUI(); save();
         }
 
@@ -219,7 +164,7 @@
                     const canv = document.createElement('canvas'); const ctx = canv.getContext('2d');
                     canv.width = 1; canv.height = 1; ctx.drawImage(img,0,0,1,1);
                     const [r,g,b] = ctx.getImageData(0,0,1,1).data;
-                    config.fg = "#" + ((1<<24)+(Math.max(r,120)<<16)+(Math.max(g,120)<<8)+Math.max(b,120)).toString(16).slice(1);
+                    config.fg = "#" + ((1<<24)+(Math.max(r,100)<<16)+(Math.max(g,100)<<8)+Math.max(b,100)).toString(16).slice(1);
                     applyUI(); save();
                 };
             }; reader.readAsDataURL(input.files[0]);
@@ -240,9 +185,14 @@
         function send() {
             const i = document.getElementById('userInput'); const val = i.value.trim(); if(!val) return;
             addMessage('YOU', val, 'user');
-            const res = getAiResponse(val);
-            setTimeout(() => addMessage('PROTO', res.text, res.type), 500);
-            i.value = '';
+            setTimeout(() => {
+                const t = i18n[config.lang];
+                if(config.mode === 'safe' && /18+|мат|секс|порно/i.test(val)) {
+                    addMessage('SYSTEM', t.warn, 'warn');
+                } else {
+                    addMessage('PROTO', t.proto + " " + val);
+                }
+            }, 600); i.value = '';
         }
 
         function toggleSettings() { const s = document.getElementById('settings-panel'); s.style.display = s.style.display==='block'?'none':'block'; }
@@ -251,8 +201,7 @@
         function save() { localStorage.setItem('p_cfg', JSON.stringify(config)); }
         function toggleRec() {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!SR) { alert("Not supported"); return; }
-            let r = new SR(); r.lang = i18n[config.lang].speech;
+            if(!SR) return; let r = new SR(); r.lang = i18n[config.lang].speech;
             r.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
             r.start();
         }
