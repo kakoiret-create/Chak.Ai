@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>PROTOS V20.1: ULTIMATE FIXED</title>
+    <title>PROTOS V20.2: ULTIMATE FIXED</title>
     <style>
         :root { --bg: #000; --color: #0f0; --accent: #f00; }
         body { background: var(--bg); color: var(--color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; transition: 0.3s; }
@@ -36,7 +36,7 @@
 
     <div class="window">
         <h2>
-            <span>[ PROTOS_V20.1 ]</span>
+            <span>[ PROTOS_V20.2 ]</span>
             <div class="controls">
                 <button onclick="toggleSettings()" style="border-color: #ff0; color: #ff0;">⚙ CONFIG</button>
                 <button id="resetBtn" onclick="resetCore()">RESET</button>
@@ -69,7 +69,7 @@
         let currentFileData = null;
         let voices = [];
 
-        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Система V20.1 готова. Напиши "Нарисуй..."'); };
+        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Система V20.2 готова. Попробуй: "Нарисуй киберпанк"'); };
 
         function applyUI() {
             document.body.style.backgroundColor = config.bg;
@@ -120,6 +120,8 @@
             if (val.toLowerCase().includes('нарисуй') || val.toLowerCase().includes('/draw')) {
                 btn.classList.add('loading');
                 const prompt = val.replace(/нарисуй|\/draw/gi, '').trim() || "Anime art";
+                
+                // ИСПРАВЛЕННАЯ ССЫЛКА С /p/
                 const genUrl = `https://pollinations.ai{encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random()*999999)}&model=flux&nologo=true`;
                 
                 addMessage('PROTOS', `Генерирую: ${prompt}...`);
@@ -130,10 +132,11 @@
                 
                 const dl = document.createElement('a');
                 dl.className = 'download-btn';
-                dl.href = genUrl; dl.target = "_blank"; dl.innerText = "[ СКАЧАТЬ ]";
+                dl.href = genUrl; dl.target = "_blank"; dl.innerText = "[ СКАЧАТЬ ОРИГИНАЛ ]";
                 document.getElementById('chat-box').appendChild(dl);
                 
                 img.onload = () => { btn.classList.remove('loading'); document.getElementById('chat-box').scrollTop = 99999; };
+                img.onerror = () => { addMessage('SYSTEM', 'ОШИБКА ГЕНЕРАЦИИ.'); btn.classList.remove('loading'); };
                 return;
             }
 
@@ -158,7 +161,7 @@
                 memory.push({role: "user", content: val}, {role: "assistant", content: answer});
                 if(memory.length > 10) memory.splice(0,2);
                 localStorage.setItem('p_mem', JSON.stringify(memory));
-            } catch(e) { addMessage('SYSTEM', 'ОШИБКА СЕТИ.'); }
+            } catch(e) { addMessage('SYSTEM', 'СБОЙ СЕТИ.'); }
             btn.classList.remove('loading');
         }
 
