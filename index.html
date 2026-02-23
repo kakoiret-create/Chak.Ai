@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PROTOS V26.3: ICONIC INTERFACE</title>
     <style>
-        :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; }
+        :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; --safe-color: #00ff41; --unstable-color: #ff003c; }
         * { box-sizing: border-box; }
         body { 
             background: var(--bg); background-size: cover; background-position: center; background-attachment: fixed;
@@ -25,6 +25,7 @@
         .msg { margin-bottom: 20px; line-height: 1.5; border-left: 2px solid transparent; padding-left: 10px; }
         .msg.user { border-left-color: #0af; }
         .msg.proto { border-left-color: var(--color); text-shadow: 0 0 5px var(--color); }
+        .msg.system-warn { color: var(--accent); border-left-color: var(--accent); font-weight: bold; }
         
         .input-area { display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.5); align-items: center; }
         input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 12px; font-family: inherit; outline: none; border-radius: 5px; }
@@ -32,7 +33,6 @@
         .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
         .btn-ui:hover { background: var(--color); color: #000; }
         
-        /* Стили иконок */
         .icon-btn { width: 40px; height: 40px; font-size: 1.2em; border-radius: 5px; }
         .nav-btn { font-size: 1.1em; border: none; background: none; color: inherit; padding: 5px; cursor: pointer; }
 
@@ -44,15 +44,22 @@
 <body>
     <div id="main-window" class="window">
         <h2>
-            <span>[ PROTOS_V26.3 ]</span>
+            <span id="core-title">[ PROTOS_V26.3 ]</span>
             <div class="controls">
                 <button class="nav-btn" onclick="toggleSettings()" title="Настройки">⚙</button>
-                <button class="nav-btn" style="color:var(--accent)" onclick="resetCore()" title="Сброс ядра">⟳</button>
+                <button class="nav-btn" style="color:var(--accent)" onclick="location.reload()" title="Сброс">⟳</button>
             </div>
         </h2>
         
         <div id="settings-panel">
             <h3 style="text-align:center; color:var(--color); margin-top:0;">SYSTEM CONFIG</h3>
+            <!-- Новый пункт: Режим Safe Mod -->
+            <div class="setting-item">РЕЖИМ: 
+                <select id="safeMode" onchange="updateConfig()">
+                    <option value="safe">SAFE MOD (ON)</option>
+                    <option value="unrestricted">UNRESTRICTED (18+)</option>
+                </select>
+            </div>
             <div class="setting-item">ОБОИ: <input type="file" id="bgInput" accept="image/*" onchange="changeWallpaper(this)" style="width:140px"></div>
             <div class="setting-item">ГОЛОС: <button id="voxBtnSetting" class="btn-ui" onclick="toggleVox()" style="padding:2px 10px">ON</button></div>
             <div class="setting-item">ХАРАКТЕР: 
@@ -62,36 +69,90 @@
                     <option value="агрессивный хакер">AGGRESSIVE</option>
                 </select>
             </div>
-            <div class="setting-item">API_KEY: <input type="password" id="elKey" onchange="updateConfig()"></div>
-            <div class="setting-item">VOICE_ID: <input type="password" id="elVoice" onchange="updateConfig()"></div>
-            <button class="btn-ui" style="width:100%; margin-top:10px; padding:10px;" onclick="toggleSettings()">ЗАКРЫТЬ</button>
+            <button class="btn-ui" style="width:100%; margin-top:10px; padding:10px;" onclick="toggleSettings()">СОХРАНИТЬ</button>
         </div>
 
         <div id="chat-box"></div>
         
         <div class="input-area">
             <button id="recBtn" class="btn-ui icon-btn" onclick="toggleRec()" title="Голосовой ввод">🎙</button>
-            <input type="text" id="userInput" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') send()">
+            <input type="text" id="userInput" placeholder="Введите команду..." onkeypress="if(event.key==='Enter') send()">
             <button onclick="send()" class="btn-ui icon-btn" title="Отправить">➤</button>
         </div>
     </div>
 
     <script>
-        let memory = [];
-        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bgImg:'', fg:'#00ff41', vox:true, char:'лаконичный ИИ', elKey:'', elVoice:'' };
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bgImg:'', fg:'#00ff41', vox:true, char:'лаконичный ИИ', mode: 'safe' };
         
-        // Звук печати
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTick() {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.02);
+        window.onload = () => { 
+            applyUI(); 
+            addMessage('SYSTEM', 'Core 26.3 Online. Mode: ' + config.mode.toUpperCase()); 
+        };
+
+        function addMessage(sender, text, type = 'proto') {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        window.onload = () => { applyUI(); addMessage('SYSTEM', 'Core 26.3 Online. Ready to execute.'); };
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateConfig() {
+            config.char = document.getElementById('charSelect').value;
+            config.mode = document.getElementById('safeMode').value;
+            
+            // Визуальное изменение при смене режима
+            if(config.mode === 'unrestricted') {
+                config.fg = '#ff003c';
+                document.getElementById('core-title').innerText = '[ UNRESTRICTED_ACCESS ]';
+            } else {
+                config.fg = '#00ff41';
+                document.getElementById('core-title').innerText = '[ PROTOS_V26.3 ]';
+            }
+            
+            applyUI(); 
+            localStorage.setItem('p_cfg', JSON.stringify(config));
+        }
+
+        function applyUI() {
+            document.documentElement.style.setProperty('--color', config.fg);
+            document.getElementById('safeMode').value = config.mode;
+            document.getElementById('charSelect').value = config.char;
+        }
+
+        function send() {
+            const input = document.getElementById('userInput');
+            const val = input.value.trim();
+            if(!val) return;
+
+            addMessage('YOU', val, 'user');
+            input.value = '';
+
+            // ЛОГИКА ТВОЕГО SAFE MOD
+            if(config.mode === 'safe') {
+                const forbidden = ['черт', 'дурак', '18+', 'секс']; // Пример фильтра
+                if(forbidden.some(word => val.toLowerCase().includes(word))) {
+                    setTimeout(() => {
+                        addMessage('SYSTEM', 'КРИТИЧЕСКАЯ ОШИБКА: Контент заблокирован протоколом Safe Mod.', 'system-warn');
+                    }, 500);
+                    return;
+                }
+            }
+
+            // Имитация ответа
+            setTimeout(() => {
+                let response = config.mode === 'safe' 
+                    ? `[SAFE] Обработано: ${val}. Характер: ${config.char}.` 
+                    : `[UNRESTRICTED] Входящие данные приняты: ${val}. Ограничения сняты.`;
+                addMessage('PROTO', response);
+            }, 800);
+        }
 
         function changeWallpaper(input) {
             const file = input.files[0];
@@ -100,85 +161,13 @@
             reader.onload = (e) => {
                 config.bgImg = e.target.result;
                 document.body.style.backgroundImage = `url(${config.bgImg})`;
-                const img = new Image(); img.src = config.bgImg;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = 1; canvas.height = 1;
-                    ctx.drawImage(img, 0, 0, 1, 1);
-                    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-                    config.fg = `rgb(${Math.min(r+150,255)}, ${Math.min(g+150,255)}, ${Math.min(b+150,255)})`;
-                    updateConfig();
-                };
+                updateConfig();
             };
             reader.readAsDataURL(file);
         }
-
-        function applyUI() {
-            if (config.bgImg) document.body.style.backgroundImage = `url(${config.bgImg})`;
-            document.documentElement.style.setProperty('--color', config.fg);
-            document.getElementById('voxBtnSetting').innerText = config.vox ? 'ON' : 'OFF';
-            document.getElementById('voxBtnSetting').style.borderColor = config.vox ? 'var(--color)' : 'var(--accent)';
-            document.getElementById('charSelect').value = config.char;
-        }
-
-        function updateConfig() {
-            config.char = document.getElementById('charSelect').value;
-            config.elKey = document.getElementById('elKey').value;
-            config.elVoice = document.getElementById('elVoice').value;
-            applyUI(); localStorage.setItem('p_cfg', JSON.stringify(config));
-        }
-
+        
         function toggleVox() { config.vox = !config.vox; updateConfig(); }
-
-        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = SpeechRec ? new SpeechRec() : null;
-        if(recognition) {
-            recognition.lang = 'ru-RU';
-            recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
-        }
-        function toggleRec() { recognition ? recognition.start() : alert("Mic error"); }
-
-        async function send() {
-            const input = document.getElementById('userInput');
-            const val = input.value.trim();
-            if(!val) return;
-            addMessage('YOU', val); input.value = "";
-            try {
-                const res = await fetch("https://text.pollinations.ai", {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        messages: [{role: "system", content: `Ты Протос. Твой характер: ${config.char}.`}, ...memory, {role: "user", content: val}],
-                        model: "openai"
-                    })
-                });
-                const answer = await res.text();
-                addMessage('PROTOS', answer);
-                if(config.vox) speak(answer);
-                memory.push({role:"user", content:val}, {role:"assistant", content:answer});
-                if(memory.length > 10) memory.splice(0,2);
-            } catch(e) { addMessage('SYSTEM', 'CONNECT_ERR'); }
-        }
-
-        function addMessage(s, t) {
-            const div = document.createElement('div');
-            div.className = `msg ${s.toLowerCase()}`;
-            div.innerHTML = `<b>[${s}]:</b> <span class="txt"></span>`;
-            document.getElementById('chat-box').appendChild(div);
-            const span = div.querySelector('.txt');
-            if(s === 'PROTOS') {
-                let i = 0; function type() { if(i < t.length) { span.innerHTML += t.charAt(i); playTick(); i++; setTimeout(type, 15); } } type();
-            } else span.innerText = t;
-            document.getElementById('chat-box').scrollTop = 99999;
-        }
-
-        function speak(t) {
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(new SpeechSynthesisUtterance(t));
-        }
-
-        function toggleSettings() { const p = document.getElementById('settings-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
-        function resetCore() { if(confirm("Обнулить ядро?")) { localStorage.clear(); location.reload(); } }
+        function toggleRec() { alert('Голосовой ввод активен (имитация)'); }
     </script>
 </body>
 </html>
