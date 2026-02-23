@@ -3,76 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOS V23.1: VISION FIXED</title>
+    <title>PROTOS V24: PURE TEXT ENGINE</title>
     <style>
-        :root { --bg: #050505; --color: #00ff41; --accent: #ff003c; --shadow: rgba(0, 255, 65, 0.2); }
-        * { box-sizing: border-box; }
+        :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; --shadow: rgba(0, 255, 65, 0.3); }
+        * { box-sizing: border-box; cursor: crosshair; }
         body { background: var(--bg); margin: 0; overflow: hidden; font-family: 'Consolas', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: 1; opacity: 0.15; }
+        
+        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: 1; opacity: 0.1; pointer-events: none; }
         body::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, transparent 20%, var(--bg) 90%); z-index: 2; pointer-events: none; }
-        .window { width: 95%; max-width: 1000px; height: 92vh; border: 1px solid var(--color); background: rgba(0,0,0,0.85); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 30px var(--shadow); z-index: 10; backdrop-filter: blur(5px); }
-        .shaking { animation: shake 0.15s infinite; border-color: var(--accent) !important; filter: saturate(2); }
-        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(0, 1px); } }
-        h2 { background: var(--color); color: #000; margin: 0; padding: 10px 15px; font-size: 0.8em; letter-spacing: 3px; display: flex; justify-content: space-between; align-items: center; }
-        #chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
-        #chat-box::-webkit-scrollbar { width: 3px; }
+
+        .window { width: 90%; max-width: 850px; height: 85vh; border: 1px solid var(--color); background: rgba(0,5,0,0.9); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px var(--shadow); z-index: 10; backdrop-filter: blur(10px); }
+        
+        h2 { background: var(--color); color: #000; margin: 0; padding: 12px; font-size: 0.8em; letter-spacing: 4px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; }
+        
+        #chat-box { flex-grow: 1; overflow-y: auto; padding: 25px; scroll-behavior: smooth; }
+        #chat-box::-webkit-scrollbar { width: 2px; }
         #chat-box::-webkit-scrollbar-thumb { background: var(--color); }
-        .msg { margin-bottom: 20px; line-height: 1.6; border-left: 2px solid transparent; padding-left: 12px; }
-        .msg.user { border-left-color: #0af; }
-        .msg.proto { border-left-color: var(--color); }
-        .msg.system { border-left-color: var(--accent); color: var(--accent); font-size: 0.8em; font-style: italic; }
-        .proto-name { color: var(--color); font-weight: bold; text-transform: uppercase; }
-        .user-name { color: #0af; font-weight: bold; }
-        .gen-img { max-width: 100%; border: 1px solid var(--color); margin-top: 15px; box-shadow: 0 0 20px var(--shadow); }
-        .input-area { display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.9); border-top: 1px solid var(--color); }
-        input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 12px; font-family: inherit; outline: none; }
-        .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); padding: 10px 15px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; font-size: 0.7em; transition: 0.3s; }
+
+        .msg { margin-bottom: 25px; line-height: 1.7; border-left: 3px solid transparent; padding-left: 15px; font-size: 1.05em; }
+        .msg.user { border-left-color: #0af; color: #eee; }
+        .msg.proto { border-left-color: var(--color); text-shadow: 0 0 5px var(--shadow); }
+        .msg.system { border-left-color: var(--accent); color: var(--accent); font-size: 0.85em; opacity: 0.8; }
+
+        .proto-name { color: var(--color); font-weight: bold; margin-right: 10px; }
+        .user-name { color: #0af; font-weight: bold; margin-right: 10px; }
+
+        .input-area { display: flex; gap: 15px; padding: 20px; background: rgba(0,0,0,0.95); border-top: 1px solid var(--color); }
+        input#userInput { flex-grow: 1; background: transparent; border: none; border-bottom: 1px solid var(--color); color: var(--color); padding: 10px; font-family: inherit; outline: none; font-size: 1.1em; }
+        
+        .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); padding: 8px 20px; cursor: pointer; font-family: inherit; font-weight: bold; text-transform: uppercase; font-size: 0.75em; transition: 0.2s; }
         .btn-ui:hover { background: var(--color); color: #000; box-shadow: 0 0 20px var(--color); }
-        #recBtn.active { background: var(--accent); color: #fff; border-color: var(--accent); animation: pulse 1s infinite; }
-        @keyframes pulse { 50% { opacity: 0.5; } }
-        #settings-panel { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 2px solid var(--color); padding: 30px; z-index: 100; width: 350px; box-shadow: 0 0 100px #000; }
-        .setting-item { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; }
+        
+        #settings-panel { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 1px solid var(--color); padding: 30px; z-index: 100; width: 320px; box-shadow: 0 0 100px #000; }
+        .setting-item { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; }
+
+        .shaking { animation: shake 0.1s infinite; }
+        @keyframes shake { 0% { transform: translate(1px,0); } 100% { transform: translate(-1px,0); } }
     </style>
 </head>
 <body>
+
     <canvas id="matrix-canvas"></canvas>
+
     <div id="main-window" class="window">
         <h2>
-            <span>[ PROTO_OS_V23.1 // VISION_ENABLED ]</span>
+            <span id="header-text">>> PROTOS // PURE_TEXT_MODE // V24</span>
             <div class="controls">
-                <button class="btn-ui" style="border-color:#fff; color:#fff" onclick="toggleSettings()">CFG</button>
+                <button class="btn-ui" onclick="toggleSettings()">CFG</button>
                 <button class="btn-ui" style="border-color:var(--accent); color:var(--accent)" onclick="resetCore()">PURGE</button>
             </div>
         </h2>
+
         <div id="settings-panel">
-            <h3 style="text-align:center; color: var(--color);">CORE CONFIG</h3>
-            <div class="setting-item">THEME_COLOR: <input type="color" id="fgColor" value="#00ff41" onchange="updateConfig()"></div>
-            <div class="setting-item">VOICE_ENGINE: <button id="voxBtnSetting" class="btn-ui" onclick="toggleVox()">ON</button></div>
-            <div class="setting-item">VOICE_ID: <select id="voiceSelect" onchange="updateConfig()" style="width:120px"></select></div>
-            <button class="btn-ui" style="width:100%" onclick="toggleSettings()">CLOSE</button>
+            <h3 style="text-align:center; color: var(--color); margin-top:0;">TERMINAL CFG</h3>
+            <div class="setting-item">COLOR_HEX: <input type="color" id="fgColor" value="#00ff41" onchange="updateConfig()"></div>
+            <div class="setting-item">SOUND_FX: <button id="soundBtn" class="btn-ui" onclick="toggleSound()">ON</button></div>
+            <div class="setting-item">VOX: <button id="voxBtn" class="btn-ui" onclick="toggleVox()">ON</button></div>
+            <button class="btn-ui" style="width:100%" onclick="toggleSettings()">RETURN</button>
         </div>
+
         <div id="chat-box"></div>
-        <div id="preview-area" style="display:none; padding:10px; border-top:1px solid var(--color); text-align:center;">
-            <div id="media-content"></div>
-            <button onclick="clearMedia()" class="btn-ui" style="border-color:var(--accent); color:var(--accent)">REMOVE_FILE</button>
-        </div>
+        
         <div class="input-area">
-            <label class="btn-ui">📎<input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)"></label>
-            <button id="recBtn" class="btn-ui" onclick="toggleRec()">REC</button>
-            <input type="text" id="userInput" placeholder="ACCESSING SYSTEM..." onkeypress="if(event.key==='Enter') send()">
+            <input type="text" id="userInput" placeholder="ОЖИДАНИЕ КОМАНДЫ..." onkeypress="if(event.key==='Enter') send()">
             <button id="exeBtn" class="btn-ui" onclick="send()">EXEC</button>
         </div>
     </div>
 
     <script>
+        // --- МАТРИЦА (ФОН) ---
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
-        let columns = Math.floor(width / 20);
-        const drops = Array(columns).fill(1);
+        const drops = Array(Math.floor(width / 20)).fill(1);
+
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(5, 5, 5, 0.05)'; ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(2, 2, 2, 0.05)'; ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--color');
             ctx.font = '15px monospace';
             drops.forEach((y, i) => {
@@ -84,56 +91,44 @@
         }
         setInterval(drawMatrix, 50);
 
+        // --- ЗВУКОВОЙ ДВИЖОК ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playClick() {
+            if (config.sound) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.01);
+            }
+        }
+
+        // --- ЛОГИКА ---
         let memory = JSON.parse(localStorage.getItem('p_mem')) || [];
-        let config = JSON.parse(localStorage.getItem('p_cfg')) || { fg:'#00ff41', vox:true, vIdx:0 };
-        let currentFileData = null;
-        const win = document.getElementById('main-window');
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { fg:'#00ff41', sound:true, vox:true };
+        
+        window.onload = () => { applyUI(); addMessage('SYSTEM', 'Terminal online. Pure Text Engine: READY.'); };
 
-        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Core V23.1 ready. Vision modules: ACTIVE.'); };
-        function applyUI() { document.documentElement.style.setProperty('--color', config.fg); document.getElementById('voxBtnSetting').innerText = config.vox ? 'ON' : 'OFF'; }
-        function updateConfig() { config.fg = document.getElementById('fgColor').value; config.vIdx = document.getElementById('voiceSelect').value; applyUI(); localStorage.setItem('p_cfg', JSON.stringify(config)); }
-        function triggerGlitch(ms) { win.classList.add('shaking'); setTimeout(() => win.classList.remove('shaking'), ms); }
-
-        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let rec = SpeechRec ? new SpeechRec() : null;
-        if(rec) {
-            rec.lang = 'ru-RU';
-            rec.onstart = () => { document.getElementById('recBtn').classList.add('active'); triggerGlitch(300); };
-            rec.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
-            rec.onend = () => document.getElementById('recBtn').classList.remove('active');
+        function applyUI() { 
+            document.documentElement.style.setProperty('--color', config.fg);
+            document.getElementById('soundBtn').innerText = config.sound ? 'ON' : 'OFF';
+            document.getElementById('voxBtn').innerText = config.vox ? 'ON' : 'OFF';
         }
-        function toggleRec() { if(rec) try { rec.start(); } catch(e) {} else alert("ERROR"); }
 
-        function handleFile(input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                currentFileData = e.target.result;
-                document.getElementById('preview-area').style.display = 'block';
-                document.getElementById('media-content').innerHTML = `<img src="${currentFileData}" style="max-height:100px; border:1px solid var(--color); margin-bottom:10px;">`;
-            };
-            reader.readAsDataURL(file);
+        function updateConfig() { 
+            config.fg = document.getElementById('fgColor').value;
+            applyUI(); localStorage.setItem('p_cfg', JSON.stringify(config)); 
         }
-        function clearMedia() { currentFileData = null; document.getElementById('preview-area').style.display = 'none'; }
 
         async function send() {
             const input = document.getElementById('userInput');
-            const btn = document.getElementById('exeBtn');
             const val = input.value.trim();
-            if(!val && !currentFileData) return;
-            addMessage('YOU', val || "[DATA_PACKET]");
-            input.value = ""; btn.disabled = true; triggerGlitch(500);
+            if(!val) return;
 
-            if(val.toLowerCase().includes('нарисуй')) {
-                const prompt = val.replace(/нарисуй/gi, '').trim();
-                const genUrl = `https://pollinations.ai{encodeURIComponent(prompt)}?width=1024&height=1024&model=flux&seed=${Math.random()}`;
-                addMessage('PROTOS', `RENDERING_VISUAL: ${prompt}`);
-                const img = document.createElement('img'); img.className = 'gen-img'; img.src = genUrl;
-                document.getElementById('chat-box').appendChild(img);
-                img.onload = () => { btn.disabled = false; document.getElementById('chat-box').scrollTop = 99999; };
-                return;
-            }
+            addMessage('YOU', val);
+            input.value = "";
+            document.getElementById('main-window').classList.add('shaking');
 
             try {
                 const res = await fetch("https://text.pollinations.ai", {
@@ -141,23 +136,27 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         messages: [
-                            {role: "system", content: "Ты Протос. Если есть картинка - опиши её детально. Отвечай кратко на русском."},
+                            {role: "system", content: "Ты Протос - высокоинтеллектуальный текстовый терминал. Твоя речь технична, точна и лаконична. Ты не тратишь время на лишние слова."},
                             ...memory,
-                            {role: "user", content: currentFileData ? [{type:"text", text: val || "Что на фото?"}, {type:"image_url", image_url:{url:currentFileData}}] : val}
+                            {role: "user", content: val}
                         ],
                         model: "openai"
                     })
                 });
+
                 const raw = await res.text();
-                if (raw.includes('<!DOCTYPE html>') || !res.ok) { addMessage('SYSTEM', 'ERROR: INTERFERENCE. RETRY.'); }
-                else {
-                    addMessage('PROTOS', raw); speak(raw);
-                    memory.push({role:"user", content:val || "Image"}, {role:"assistant", content:raw});
-                    if(memory.length > 8) memory.splice(0,2);
-                    localStorage.setItem('p_mem', JSON.stringify(memory));
-                }
-            } catch(e) { addMessage('SYSTEM', 'CRITICAL ERROR.'); }
-            btn.disabled = false; clearMedia();
+                if (raw.includes('<!DOCTYPE html>')) throw new Error();
+                
+                addMessage('PROTOS', raw);
+                if(config.vox) speak(raw);
+                
+                memory.push({role:"user", content:val}, {role:"assistant", content:raw});
+                if(memory.length > 12) memory.splice(0,2);
+                localStorage.setItem('p_mem', JSON.stringify(memory));
+
+            } catch(e) { addMessage('SYSTEM', 'CORE_ERROR: CONNECTION_FAILED.'); }
+            
+            document.getElementById('main-window').classList.remove('shaking');
         }
 
         function addMessage(s, t) {
@@ -165,25 +164,34 @@
             div.className = `msg ${s.toLowerCase()}`;
             div.innerHTML = `<span class="${s==='YOU'?'user-name':'proto-name'}">[${s}]</span> <span class="txt"></span>`;
             document.getElementById('chat-box').appendChild(div);
+            
             const span = div.querySelector('.txt');
             if(s === 'PROTOS') {
-                let i = 0; function type() { if(i < t.length) { span.innerHTML += t.charAt(i); i++; setTimeout(type, 15); } } type();
+                let i = 0;
+                function type() { 
+                    if(i < t.length) { 
+                        span.innerHTML += t.charAt(i); 
+                        playClick();
+                        i++; 
+                        setTimeout(type, 15); 
+                    } 
+                }
+                type();
             } else { span.innerText = t; }
             document.getElementById('chat-box').scrollTop = 99999;
         }
 
         function speak(t) {
-            if(!config.vox) return;
             window.speechSynthesis.cancel();
             const m = new SpeechSynthesisUtterance(t);
-            m.voice = window.speechSynthesis.getVoices()[config.vIdx];
+            m.lang = 'ru-RU';
             window.speechSynthesis.speak(m);
         }
-        function loadVoices() { const v = window.speechSynthesis.getVoices(); document.getElementById('voiceSelect').innerHTML = v.map((v, i) => `<option value="${i}">${v.name}</option>`).join(''); }
-        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        function toggleSound() { config.sound = !config.sound; updateConfig(); }
+        function toggleVox() { config.vox = !config.vox; updateConfig(); }
         function toggleSettings() { const p = document.getElementById('settings-panel'); p.style.display = p.style.display==='block'?'none':'block'; }
-        function toggleVox() { config.vox = !config.vox; document.getElementById('voxBtnSetting').innerText = config.vox ? 'ON' : 'OFF'; updateConfig(); }
-        function resetCore() { if(confirm("DELETE DATA?")) { localStorage.clear(); location.reload(); } }
+        function resetCore() { if(confirm("PURGE ALL DATA?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
