@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>PROTOS V18.5: LEGACY FIX</title>
+    <title>PROTOS V19: MULTIMEDIA</title>
     <style>
         :root { --bg: #000; --color: #0f0; --accent: #f00; }
         body { background: var(--bg); color: var(--color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        .window { width: 95%; max-width: 800px; height: 90vh; border: 2px solid var(--color); padding: 20px; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px var(--color); }
+        .window { width: 95%; max-width: 850px; height: 90vh; border: 2px solid var(--color); padding: 20px; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px var(--color); }
         h2 { border-bottom: 2px solid var(--color); padding-bottom: 10px; margin: 0; font-size: 1.1em; display: flex; justify-content: space-between; }
         #chat-box { flex-grow: 1; overflow-y: auto; margin: 15px 0; scroll-behavior: smooth; border-right: 1px solid rgba(0,255,0,0.1); }
-        .msg { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; font-size: 0.9em; }
+        .msg { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
         .user { color: #0af; font-weight: bold; }
         .proto { font-weight: bold; text-shadow: 0 0 5px var(--color); }
+        .gen-img { max-width: 100%; border: 1px solid var(--color); margin-top: 10px; box-shadow: 0 0 10px var(--color); }
         #preview-area { display: none; padding: 10px; border: 1px dashed var(--color); margin-bottom: 5px; text-align: center; }
-        #preview-media { max-width: 100px; border: 1px solid var(--color); margin-top: 5px; }
+        #preview-media { max-width: 80px; border: 1px solid var(--color); }
         .input-area { display: flex; gap: 5px; align-items: center; }
         input#userInput { flex-grow: 1; padding: 12px; background: transparent; border: 1px solid var(--color); color: var(--color); outline: none; font-family: inherit; }
         .file-label { cursor: pointer; font-size: 20px; padding: 5px; border: 1px solid var(--color); }
@@ -24,12 +25,12 @@
 </head>
 <body>
     <div class="window">
-        <h2>[ PROTOS_V18.5_FIXED ] <button onclick="resetCore()" style="color:red; background:none; border:1px solid red; cursor:pointer; font-family:inherit; font-size: 0.7em;">CORE RESET</button></h2>
+        <h2>[ PROTOS_V19_GEN ] <button onclick="resetCore()" style="color:red; background:none; border:1px solid red; cursor:pointer; font-family:inherit;">RESET</button></h2>
         <div id="chat-box"></div>
         <div id="preview-area"><div id="media-content"></div></div>
         <div class="input-area">
-            <label class="file-label" title="Загрузить фото">📎<input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)"></label>
-            <input type="text" id="userInput" placeholder="КТО ЭТО? / ЧТО НА ФОТО?" onkeypress="if(event.key==='Enter') send()">
+            <label class="file-label" title="Загрузить стиль">📎<input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)"></label>
+            <input type="text" id="userInput" placeholder="НАРИСУЙ... / СДЕЛАЙ ПОХОЖЕ..." onkeypress="if(event.key==='Enter') send()">
             <button onclick="send()" id="sendBtn" style="background:var(--color); color:#000; font-weight:bold; padding:12px; cursor:pointer; font-family:inherit;">SEND</button>
         </div>
     </div>
@@ -45,7 +46,7 @@
             reader.onload = (e) => {
                 currentFileData = e.target.result;
                 document.getElementById('preview-area').style.display = 'block';
-                document.getElementById('media-content').innerHTML = `<span>ФОТО СЧИТАНО</span><br><img src="${currentFileData}" id="preview-media">`;
+                document.getElementById('media-content').innerHTML = `<span>СТИЛЬ СЧИТАН</span><br><img src="${currentFileData}" id="preview-media">`;
             };
             reader.readAsDataURL(file);
         }
@@ -56,53 +57,55 @@
             const val = input.value.trim();
             if(!val && !currentFileData) return;
 
-            addMessage('YOU', val + (currentFileData ? " [SENDING IMAGE...]" : ""));
+            addMessage('YOU', val);
             input.value = "";
             btn.classList.add('loading');
-            btn.innerText = "WAIT...";
 
+            // ЕСЛИ ЗАПРОС НА ГЕНЕРАЦИЮ (слово 'нарисуй' или '/draw')
+            if (val.toLowerCase().includes('нарисуй') || val.toLowerCase().includes('/draw')) {
+                const prompt = val.replace(/нарисуй|\/draw/gi, '').trim();
+                const genUrl = `https://pollinations.ai{encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random()*1000)}&model=flux`;
+                addMessage('PROTOS', `Генерирую изображение по запросу: "${prompt}"...`);
+                const img = document.createElement('img');
+                img.src = genUrl;
+                img.className = 'gen-img';
+                img.onload = () => {
+                    document.getElementById('chat-box').appendChild(img);
+                    document.getElementById('chat-box').scrollTop = 99999;
+                    btn.classList.remove('loading');
+                };
+                return;
+            }
+
+            // ОБЫЧНЫЙ ЗАПРОС ИЛИ АНАЛИЗ СТИЛЯ
             try {
-                // Прямой запрос к универсальному эндпоинту Pollinations
                 const response = await fetch("https://text.pollinations.ai", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         messages: [
-                            { role: "system", content: "Ты Протос. Ты видишь изображения. Если на фото Колоссальный Титан или другой персонаж — назови его. Отвечай кратко на русском языке." },
+                            { role: "system", content: "Ты Протос. Если пользователь прислал фото и просит 'сделать похоже', опиши стиль фото и предложи промпт, начинающийся с команды /draw." },
                             ...memory,
                             {
                                 role: "user",
-                                content: currentFileData 
-                                    ? [
-                                        { type: "text", text: val || "Что на этом фото?" },
-                                        { type: "image_url", image_url: { url: currentFileData } }
-                                      ]
-                                    : val
+                                content: currentFileData ? [
+                                    { type: "text", text: val || "Опиши этот стиль для генерации" },
+                                    { type: "image_url", image_url: { url: currentFileData } }
+                                ] : val
                             }
                         ],
-                        model: "openai", // Используем базовый алиас, он самый стабильный
-                        seed: Math.floor(Math.random() * 1000)
+                        model: "openai"
                     })
                 });
 
-                if (!response.ok) throw new Error();
-
                 const answer = await response.text();
                 addMessage('PROTOS', answer);
-                
-                // Сброс файла после отправки
                 currentFileData = null;
                 document.getElementById('preview-area').style.display = 'none';
-                document.getElementById('fileInput').value = "";
-
-                memory.push({role: "user", content: val || "Image query"}, {role: "assistant", content: answer});
-                if(memory.length > 10) memory.splice(0,2);
-            } catch(e) { 
-                addMessage('SYSTEM', 'ОШИБКА: Модель Vision перегружена или недоступна. Нажми CORE RESET.'); 
-            } finally {
-                btn.classList.remove('loading');
-                btn.innerText = "SEND";
-            }
+                memory.push({role: "user", content: val}, {role: "assistant", content: answer});
+                if(memory.length > 6) memory.splice(0,2);
+            } catch(e) { addMessage('SYSTEM', 'СБОЙ.'); }
+            btn.classList.remove('loading');
         }
 
         function addMessage(s, t) {
@@ -113,9 +116,7 @@
             document.getElementById('chat-box').scrollTop = 99999;
         }
 
-        function resetCore() { memory = []; localStorage.clear(); location.reload(); }
-        
-        window.onload = () => addMessage('SYSTEM', 'СИСТЕМА ГОТОВА. ЗАГРУЗИТЕ ФОТО.');
+        function resetCore() { memory = []; location.reload(); }
     </script>
 </body>
 </html>
