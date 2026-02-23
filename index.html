@@ -3,45 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>PROTOS V13: CUSTOM_UI</title>
+    <title>PROTOS V14: VOX_CONTROL</title>
     <style>
-        /* Переменные для динамической смены цветов */
         :root { --main-bg: #000; --main-color: #0f0; }
-
-        body { background: var(--main-bg); color: var(--main-color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; transition: 0.3s; }
-        .window { width: 95%; max-width: 800px; height: 90vh; border: 1px solid var(--main-color); padding: 20px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,255,0,0.1); }
-        
-        h2 { border-bottom: 1px solid var(--main-color); padding-bottom: 10px; margin: 0; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; }
-        
+        body { background: var(--main-bg); color: var(--main-color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .window { width: 95%; max-width: 800px; height: 90vh; border: 2px solid var(--main-color); padding: 20px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; box-shadow: 0 0 20px var(--main-color); }
+        h2 { border-bottom: 2px solid var(--main-color); padding-bottom: 10px; margin: 0; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; }
         .controls { display: flex; gap: 10px; align-items: center; }
-        .controls input[type="color"] { background: none; border: none; width: 25px; height: 25px; cursor: pointer; padding: 0; }
-        .controls label { font-size: 0.7em; text-transform: uppercase; }
-
+        .controls input[type="color"] { background: none; border: 1px solid var(--main-color); width: 20px; height: 20px; cursor: pointer; }
         #chat-box { flex-grow: 1; overflow-y: auto; margin: 15px 0; padding-right: 10px; scroll-behavior: smooth; }
-        .msg { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
+        .msg { margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
         .user { opacity: 0.6; } .proto { font-weight: bold; }
-        
         .input-area { display: flex; gap: 5px; }
-        input[type="text"] { flex-grow: 1; padding: 15px; background: transparent; border: 1px solid var(--main-color); color: var(--main-color); outline: none; font-size: 16px; font-family: inherit; }
-        button { background: var(--main-color); color: var(--main-bg); border: none; padding: 0 15px; cursor: pointer; font-weight: bold; }
-        button:hover { filter: brightness(1.2); }
+        input[type="text"] { flex-grow: 1; padding: 15px; background: transparent; border: 1px solid var(--main-color); color: var(--main-color); outline: none; font-family: inherit; font-size: 16px; }
+        button { background: var(--main-color); color: var(--main-bg); border: none; padding: 0 15px; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .rec-active { background: #f00 !important; color: #fff; animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
     <div class="window">
         <h2>
-            <span>[ PROTOS_V13: UI_TUNER ]</span>
+            <span>[ PROTOS_V14: VOX ]</span>
             <div class="controls">
-                <label>BG</label>
                 <input type="color" id="bgPicker" onchange="updateTheme()">
-                <label>CLR</label>
                 <input type="color" id="clrPicker" onchange="updateTheme()">
             </div>
         </h2>
         <div id="chat-box"></div>
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="ВВОД..." autocomplete="off" onkeypress="if(event.key==='Enter') send()">
+            <button id="recBtn" onclick="toggleRec()">REC</button>
+            <input type="text" id="userInput" placeholder="СКАЖИ ЧТО-НИБУДЬ..." autocomplete="off" onkeypress="if(event.key==='Enter') send()">
             <button onclick="send()">SEND</button>
         </div>
     </div>
@@ -49,15 +42,14 @@
     <script>
         let memory = JSON.parse(localStorage.getItem('protos_memory')) || [];
         const chatBox = document.getElementById('chat-box');
+        const recBtn = document.getElementById('recBtn');
 
-        // Загрузка темы при старте
+        // Загрузка темы
         window.onload = () => {
-            const savedBg = localStorage.getItem('protos_bg') || '#000000';
-            const savedClr = localStorage.getItem('protos_clr') || '#00ff00';
-            document.getElementById('bgPicker').value = savedBg;
-            document.getElementById('clrPicker').value = savedClr;
+            document.getElementById('bgPicker').value = localStorage.getItem('protos_bg') || '#000000';
+            document.getElementById('clrPicker').value = localStorage.getItem('protos_clr') || '#00ff00';
             updateTheme();
-            addMessage('PROTOS', 'Настройки интерфейса загружены. Что нового?');
+            addMessage('PROTOS', 'Голосовые модули и кастомизация активны.');
         };
 
         function updateTheme() {
@@ -67,6 +59,30 @@
             document.documentElement.style.setProperty('--main-color', clr);
             localStorage.setItem('protos_bg', bg);
             localStorage.setItem('protos_clr', clr);
+        }
+
+        // Распознавание голоса
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+        if (recognition) {
+            recognition.lang = 'ru-RU';
+            recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
+            recognition.onend = () => recBtn.classList.remove('rec-active');
+        }
+
+        function toggleRec() {
+            if (!recognition) return alert("Голос не поддерживается");
+            recBtn.classList.add('rec-active');
+            recognition.start();
+        }
+
+        // Озвучка
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'ru-RU';
+            msg.rate = 1.1;
+            window.speechSynthesis.speak(msg);
         }
 
         function addMessage(sender, text) {
@@ -90,23 +106,22 @@
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        messages: [
-                            {role: "system", content: "Ты Протос, дерзкий ИИ. Отвечай кратко и убирай рекламу."}
-                        ].concat(memory, [{role: "user", content: val}]),
+                        messages: [{role: "system", content: "Ты Протос, дерзкий ИИ. Отвечай кратко, БЕЗ РЕКЛАМЫ."}].concat(memory, [{role: "user", content: val}]),
                         model: "openai"
                     })
                 });
                 
                 let answer = await response.text();
-                // Чистка от рекламы
                 answer = answer.split("---")[0].split("🌸")[0].trim();
 
                 addMessage('PROTOS', answer);
+                speak(answer);
+
                 memory.push({role: "user", content: val}, {role: "assistant", content: answer});
                 if (memory.length > 20) memory.splice(0, 2);
                 localStorage.setItem('protos_memory', JSON.stringify(memory));
             } catch (e) {
-                addMessage('SYSTEM', "СБОЙ СЕТИ.");
+                addMessage('SYSTEM', "СБОЙ.");
             }
         }
     </script>
