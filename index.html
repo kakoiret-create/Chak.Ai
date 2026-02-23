@@ -3,80 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>PROTOS V17: CUSTOMIZER</title>
+    <title>PROTOS V17: SETTINGS FIXED</title>
     <style>
         :root { --bg: #000; --color: #0f0; --accent: #f00; }
-        body { background: var(--bg); color: var(--color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; transition: 0.3s; }
-        .window { width: 95%; max-width: 850px; height: 90vh; border: 2px solid var(--color); padding: 20px; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; box-shadow: 0 0 15px var(--color); position: relative; }
+        body { background: var(--bg); color: var(--color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .window { width: 95%; max-width: 800px; height: 90vh; border: 2px solid var(--color); padding: 20px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 15px var(--color); }
         
-        /* Панель настроек */
-        #settings-panel { display: none; position: absolute; top: 60px; right: 20px; background: #111; border: 1px solid var(--color); padding: 15px; z-index: 10; box-shadow: 0 0 20px #000; font-size: 0.8em; }
-        .setting-item { margin-bottom: 10px; display: flex; justify-content: space-between; gap: 20px; align-items: center; }
-        
+        /* КНОПКИ УПРАВЛЕНИЯ */
         h2 { border-bottom: 2px solid var(--color); padding-bottom: 10px; margin: 0; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; }
         .controls { display: flex; gap: 8px; }
-        
-        button { background: transparent; border: 1px solid var(--color); color: var(--color); font-size: 0.7em; padding: 4px 8px; cursor: pointer; font-family: inherit; }
+        button { background: transparent; border: 1px solid var(--color); color: var(--color); font-size: 0.7em; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; }
         button:hover { background: var(--color); color: #000; }
-        #resetBtn { border-color: var(--accent); color: var(--accent); }
 
+        /* ПАНЕЛЬ НАСТРОЕК (ЦЕНТРАЛЬНАЯ) */
+        #settings-panel { 
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #111; border: 2px solid var(--color); padding: 25px; z-index: 100; 
+            box-shadow: 0 0 40px #000; min-width: 250px;
+        }
+        .setting-item { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: none; }
+        select { background: #000; color: var(--color); border: 1px solid var(--color); font-family: inherit; width: 100%; }
+
+        /* ЧАТ */
         #chat-box { flex-grow: 1; overflow-y: auto; margin: 15px 0; padding-right: 10px; scroll-behavior: smooth; }
-        .msg { margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-        .user { opacity: 0.7; color: cyan; } .proto { font-weight: bold; }
+        .msg { margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; word-wrap: break-word; }
+        .user { color: #0af; opacity: 0.8; }
+        .proto { font-weight: bold; text-shadow: 0 0 5px var(--color); }
 
+        /* ВВОД */
         .input-area { display: flex; gap: 5px; }
-        input[type="text"], select { background: transparent; border: 1px solid var(--color); color: var(--color); padding: 10px; font-family: inherit; }
-        input[type="text"] { flex-grow: 1; }
+        input[type="text"] { flex-grow: 1; padding: 12px; background: transparent; border: 1px solid var(--color); color: var(--color); outline: none; font-family: inherit; }
         .rec-active { background: var(--accent) !important; color: #fff; animation: pulse 1s infinite; }
         @keyframes pulse { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
+
     <div class="window">
         <h2>
             <span>[ PROTOS_V17 ]</span>
             <div class="controls">
-                <button onclick="toggleSettings()">SETTINGS</button>
-                <button id="resetBtn" onclick="resetCore()">CORE RESET</button>
-                <button id="voxBtn" onclick="toggleVox()">VOX: ON</button>
+                <button onclick="toggleSettings()" style="border-color: #ff0; color: #ff0;">⚙ SETTINGS</button>
+                <button onclick="resetCore()" style="border-color: var(--accent); color: var(--accent);">RESET</button>
             </div>
         </h2>
 
+        <!-- ПАНЕЛЬ НАСТРОЕК -->
         <div id="settings-panel">
-            <div class="setting-item">ФОН: <input type="color" id="bgColor" onchange="updateTheme()"></div>
-            <div class="setting-item">ТЕКСТ: <input type="color" id="fgColor" onchange="updateTheme()"></div>
-            <div class="setting-item">ГОЛОС: <select id="voiceSelect" style="width: 120px;"></select></div>
-            <button onclick="toggleSettings()" style="width: 100%">ЗАКРЫТЬ</button>
+            <h3 style="margin-top:0; text-align:center;">CONFIG</h3>
+            <div class="setting-item">
+                <span>ФОН:</span>
+                <input type="color" id="bgColor" onchange="updateTheme()">
+            </div>
+            <div class="setting-item">
+                <span>ТЕКСТ:</span>
+                <input type="color" id="fgColor" onchange="updateTheme()">
+            </div>
+            <div class="setting-item">
+                <span>ГОЛОС:</span>
+            </div>
+            <select id="voiceSelect"></select>
+            <div class="setting-item" style="margin-top:15px;">
+                <span>VOX:</span>
+                <button id="voxBtn" onclick="toggleVox()">ON</button>
+            </div>
+            <button onclick="toggleSettings()" style="width: 100%; margin-top: 15px; background: var(--color); color: #000;">SAVE & CLOSE</button>
         </div>
 
         <div id="chat-box"></div>
         
         <div class="input-area">
             <button id="recBtn" onclick="toggleRec()">REC</button>
-            <input type="text" id="userInput" placeholder="КОМАНДА..." onkeypress="if(event.key==='Enter') send()">
+            <input type="text" id="userInput" placeholder="ВВОД..." onkeypress="if(event.key==='Enter') send()">
             <button onclick="send()" style="background: var(--color); color: #000; font-weight: bold;">SEND</button>
         </div>
     </div>
 
     <script>
-        let memory = JSON.parse(localStorage.getItem('protos_mem')) || [];
-        let config = JSON.parse(localStorage.getItem('protos_cfg')) || { bg: '#000000', fg: '#00ff00', vox: true, voiceIdx: 0 };
+        let memory = JSON.parse(localStorage.getItem('p_mem')) || [];
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bg: '#000000', fg: '#00ff00', vox: true, vIdx: 0 };
         
         const chatBox = document.getElementById('chat-box');
         let voices = [];
 
         window.onload = () => {
             applyConfig();
-            loadVoices();
-            addMessage('SYSTEM', 'Интерфейс кастомизации готов.');
+            setTimeout(loadVoices, 500); // Задержка для загрузки голосов в Chrome
+            addMessage('SYSTEM', 'Система готова. Нажмите SETTINGS для настройки.');
         };
 
         function applyConfig() {
+            document.body.style.backgroundColor = config.bg;
             document.documentElement.style.setProperty('--bg', config.bg);
             document.documentElement.style.setProperty('--color', config.fg);
             document.getElementById('bgColor').value = config.bg;
             document.getElementById('fgColor').value = config.fg;
-            document.getElementById('voxBtn').innerText = config.vox ? 'VOX: ON' : 'VOX: OFF';
+            document.getElementById('voxBtn').innerText = config.vox ? 'ON' : 'OFF';
         }
 
         function updateTheme() {
@@ -89,25 +112,26 @@
         function loadVoices() {
             voices = window.speechSynthesis.getVoices();
             const select = document.getElementById('voiceSelect');
-            select.innerHTML = voices.map((v, i) => `<option value="${i}">${v.name}</option>`).join('');
-            select.value = config.voiceIdx;
-            select.onchange = () => { config.voiceIdx = select.value; saveConfig(); };
+            if (voices.length > 0) {
+                select.innerHTML = voices.map((v, i) => `<option value="${i}" ${i==config.vIdx?'selected':''}>${v.name} (${v.lang})</option>`).join('');
+            }
+            select.onchange = () => { config.vIdx = select.value; saveConfig(); };
         }
         window.speechSynthesis.onvoiceschanged = loadVoices;
 
         function toggleSettings() {
             const p = document.getElementById('settings-panel');
-            p.style.display = p.style.display === 'block' ? 'none' : 'block';
+            p.style.display = (p.style.display === 'block') ? 'none' : 'block';
         }
 
-        function saveConfig() { localStorage.setItem('protos_cfg', JSON.stringify(config)); }
-
+        function saveConfig() { localStorage.setItem('p_cfg', JSON.stringify(config)); }
         function toggleVox() { config.vox = !config.vox; saveConfig(); applyConfig(); }
 
         function resetCore() {
             if(confirm("Сбросить ядро?")) {
-                memory = []; localStorage.removeItem('protos_mem');
+                memory = []; localStorage.removeItem('p_mem');
                 chatBox.innerHTML = ''; addMessage('SYSTEM', 'Ядро очищено.');
+                window.speechSynthesis.cancel();
             }
         }
 
@@ -115,8 +139,7 @@
             if (!config.vox) return;
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
-            if(voices[config.voiceIdx]) msg.voice = voices[config.voiceIdx];
-            msg.lang = 'ru-RU';
+            if(voices[config.vIdx]) msg.voice = voices[config.vIdx];
             window.speechSynthesis.speak(msg);
         }
 
@@ -148,16 +171,212 @@
                 speak(answer);
                 memory.push({role: "user", content: val}, {role: "assistant", content: answer});
                 if(memory.length > 10) memory.splice(0,2);
-                localStorage.setItem('protos_mem', JSON.stringify(memory));
-            } catch(e) { addMessage('SYSTEM', 'ОШИБКА СЕТИ.'); }
+                localStorage.setItem('p_mem', JSON.stringify(memory));
+            } catch(e) { addMessage('SYSTEM', 'СБОЙ СЕТИ.'); }
         }
 
         // Голос (REC)
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'ru-RU';
-        recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
-        recognition.onend = () => document.getElementById('recBtn').classList.remove('rec-active');
-        function toggleRec() { document.getElementById('recBtn').classList.add('rec-active'); recognition.start(); }
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+            const recognition = new SpeechRec();
+            recognition.lang = 'ru-RU';
+            recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
+            recognition.onend = () => document.getElementById('recBtn').classList.remove('rec-active');
+            function toggleRec() { document.getElementById('recBtn').classList.add('rec-active'); recognition.start(); }
+        } else {
+            function toggleRec() { alert("Голос не поддерживается в этом браузере."); }
+        }
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>PROTOS V17: SETTINGS FIXED</title>
+    <style>
+        :root { --bg: #000; --color: #0f0; --accent: #f00; }
+        body { background: var(--bg); color: var(--color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .window { width: 95%; max-width: 800px; height: 90vh; border: 2px solid var(--color); padding: 20px; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; position: relative; box-shadow: 0 0 15px var(--color); }
+        
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        h2 { border-bottom: 2px solid var(--color); padding-bottom: 10px; margin: 0; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; }
+        .controls { display: flex; gap: 8px; }
+        button { background: transparent; border: 1px solid var(--color); color: var(--color); font-size: 0.7em; padding: 5px 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; }
+        button:hover { background: var(--color); color: #000; }
+
+        /* ПАНЕЛЬ НАСТРОЕК (ЦЕНТРАЛЬНАЯ) */
+        #settings-panel { 
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #111; border: 2px solid var(--color); padding: 25px; z-index: 100; 
+            box-shadow: 0 0 40px #000; min-width: 250px;
+        }
+        .setting-item { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        input[type="color"] { border: none; width: 30px; height: 30px; cursor: pointer; background: none; }
+        select { background: #000; color: var(--color); border: 1px solid var(--color); font-family: inherit; width: 100%; }
+
+        /* ЧАТ */
+        #chat-box { flex-grow: 1; overflow-y: auto; margin: 15px 0; padding-right: 10px; scroll-behavior: smooth; }
+        .msg { margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; word-wrap: break-word; }
+        .user { color: #0af; opacity: 0.8; }
+        .proto { font-weight: bold; text-shadow: 0 0 5px var(--color); }
+
+        /* ВВОД */
+        .input-area { display: flex; gap: 5px; }
+        input[type="text"] { flex-grow: 1; padding: 12px; background: transparent; border: 1px solid var(--color); color: var(--color); outline: none; font-family: inherit; }
+        .rec-active { background: var(--accent) !important; color: #fff; animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <div class="window">
+        <h2>
+            <span>[ PROTOS_V17 ]</span>
+            <div class="controls">
+                <button onclick="toggleSettings()" style="border-color: #ff0; color: #ff0;">⚙ SETTINGS</button>
+                <button onclick="resetCore()" style="border-color: var(--accent); color: var(--accent);">RESET</button>
+            </div>
+        </h2>
+
+        <!-- ПАНЕЛЬ НАСТРОЕК -->
+        <div id="settings-panel">
+            <h3 style="margin-top:0; text-align:center;">CONFIG</h3>
+            <div class="setting-item">
+                <span>ФОН:</span>
+                <input type="color" id="bgColor" onchange="updateTheme()">
+            </div>
+            <div class="setting-item">
+                <span>ТЕКСТ:</span>
+                <input type="color" id="fgColor" onchange="updateTheme()">
+            </div>
+            <div class="setting-item">
+                <span>ГОЛОС:</span>
+            </div>
+            <select id="voiceSelect"></select>
+            <div class="setting-item" style="margin-top:15px;">
+                <span>VOX:</span>
+                <button id="voxBtn" onclick="toggleVox()">ON</button>
+            </div>
+            <button onclick="toggleSettings()" style="width: 100%; margin-top: 15px; background: var(--color); color: #000;">SAVE & CLOSE</button>
+        </div>
+
+        <div id="chat-box"></div>
+        
+        <div class="input-area">
+            <button id="recBtn" onclick="toggleRec()">REC</button>
+            <input type="text" id="userInput" placeholder="ВВОД..." onkeypress="if(event.key==='Enter') send()">
+            <button onclick="send()" style="background: var(--color); color: #000; font-weight: bold;">SEND</button>
+        </div>
+    </div>
+
+    <script>
+        let memory = JSON.parse(localStorage.getItem('p_mem')) || [];
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bg: '#000000', fg: '#00ff00', vox: true, vIdx: 0 };
+        
+        const chatBox = document.getElementById('chat-box');
+        let voices = [];
+
+        window.onload = () => {
+            applyConfig();
+            setTimeout(loadVoices, 500); // Задержка для загрузки голосов в Chrome
+            addMessage('SYSTEM', 'Система готова. Нажмите SETTINGS для настройки.');
+        };
+
+        function applyConfig() {
+            document.body.style.backgroundColor = config.bg;
+            document.documentElement.style.setProperty('--bg', config.bg);
+            document.documentElement.style.setProperty('--color', config.fg);
+            document.getElementById('bgColor').value = config.bg;
+            document.getElementById('fgColor').value = config.fg;
+            document.getElementById('voxBtn').innerText = config.vox ? 'ON' : 'OFF';
+        }
+
+        function updateTheme() {
+            config.bg = document.getElementById('bgColor').value;
+            config.fg = document.getElementById('fgColor').value;
+            saveConfig();
+            applyConfig();
+        }
+
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+            const select = document.getElementById('voiceSelect');
+            if (voices.length > 0) {
+                select.innerHTML = voices.map((v, i) => `<option value="${i}" ${i==config.vIdx?'selected':''}>${v.name} (${v.lang})</option>`).join('');
+            }
+            select.onchange = () => { config.vIdx = select.value; saveConfig(); };
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        function toggleSettings() {
+            const p = document.getElementById('settings-panel');
+            p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function saveConfig() { localStorage.setItem('p_cfg', JSON.stringify(config)); }
+        function toggleVox() { config.vox = !config.vox; saveConfig(); applyConfig(); }
+
+        function resetCore() {
+            if(confirm("Сбросить ядро?")) {
+                memory = []; localStorage.removeItem('p_mem');
+                chatBox.innerHTML = ''; addMessage('SYSTEM', 'Ядро очищено.');
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function speak(text) {
+            if (!config.vox) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            if(voices[config.vIdx]) msg.voice = voices[config.vIdx];
+            window.speechSynthesis.speak(msg);
+        }
+
+        function addMessage(sender, text) {
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerHTML = `<span class="${sender==='YOU'?'user':'proto'}">[${sender}]:</span> ${text}`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function send() {
+            const input = document.getElementById('userInput');
+            const val = input.value.trim();
+            if(!val) return;
+            addMessage('YOU', val);
+            input.value = "";
+
+            try {
+                const res = await fetch("https://text.pollinations.ai", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        messages: [{role: "system", content: "Ты Протос, лаконичный ИИ."}, ...memory, {role: "user", content: val}]
+                    })
+                });
+                const answer = await res.text();
+                addMessage('PROTOS', answer);
+                speak(answer);
+                memory.push({role: "user", content: val}, {role: "assistant", content: answer});
+                if(memory.length > 10) memory.splice(0,2);
+                localStorage.setItem('p_mem', JSON.stringify(memory));
+            } catch(e) { addMessage('SYSTEM', 'СБОЙ СЕТИ.'); }
+        }
+
+        // Голос (REC)
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+            const recognition = new SpeechRec();
+            recognition.lang = 'ru-RU';
+            recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
+            recognition.onend = () => document.getElementById('recBtn').classList.remove('rec-active');
+            function toggleRec() { document.getElementById('recBtn').classList.add('rec-active'); recognition.start(); }
+        } else {
+            function toggleRec() { alert("Голос не поддерживается в этом браузере."); }
+        }
     </script>
 </body>
 </html>
