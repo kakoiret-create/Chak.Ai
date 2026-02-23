@@ -3,91 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOS V26.3: ICONIC INTERFACE</title>
+    <title>PROTOS V26.3: CUSTOM CORE</title>
     <style>
-        :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; --safe-color: #00ff41; --unstable-color: #ff003c; }
+        :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; }
         * { box-sizing: border-box; }
         body { 
-            background: var(--bg); background-size: cover; background-position: center; background-attachment: fixed;
+            background: var(--bg) no-repeat center center fixed; background-size: cover;
             color: var(--color); font-family: 'Consolas', monospace; 
             display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; 
+            transition: 0.5s;
         }
-        body::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 1; }
+        body::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.7); z-index: 1; }
 
         .window { 
             width: 95%; max-width: 900px; height: 90vh; border: 1px solid var(--color); 
-            background: rgba(0,0,0,0.8); display: flex; flex-direction: column; 
-            position: relative; box-shadow: 0 0 30px var(--color); z-index: 10; backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.85); display: flex; flex-direction: column; 
+            position: relative; box-shadow: 0 0 20px var(--color); z-index: 10; backdrop-filter: blur(10px);
         }
-        h2 { background: var(--color); color: #000; margin: 0; padding: 10px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center; }
+        h2 { background: var(--color); color: #000; margin: 0; padding: 10px; font-size: 0.9em; display: flex; justify-content: space-between; }
         
-        #chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; border-bottom: 1px solid var(--color); }
-        .msg { margin-bottom: 20px; line-height: 1.5; border-left: 2px solid transparent; padding-left: 10px; }
-        .msg.user { border-left-color: #0af; }
-        .msg.proto { border-left-color: var(--color); text-shadow: 0 0 5px var(--color); }
-        .msg.system-warn { color: var(--accent); border-left-color: var(--accent); font-weight: bold; }
-        
-        .input-area { display: flex; gap: 10px; padding: 15px; background: rgba(0,0,0,0.5); align-items: center; }
-        input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 12px; font-family: inherit; outline: none; border-radius: 5px; }
-        
-        .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-        .btn-ui:hover { background: var(--color); color: #000; }
-        
-        .icon-btn { width: 40px; height: 40px; font-size: 1.2em; border-radius: 5px; }
-        .nav-btn { font-size: 1.1em; border: none; background: none; color: inherit; padding: 5px; cursor: pointer; }
+        #chat-box { flex-grow: 1; overflow-y: auto; padding: 20px; border-bottom: 1px solid var(--color); }
+        .msg { margin-bottom: 15px; border-left: 2px solid var(--color); padding-left: 10px; }
+        .msg.user { border-left-color: #0af; color: #0af; }
 
-        #settings-panel { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 2px solid var(--color); padding: 25px; z-index: 100; width: 350px; box-shadow: 0 0 100px #000; }
-        .setting-item { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; }
-        select, input[type="password"] { background: #111; color: var(--color); border: 1px solid var(--color); font-family: inherit; padding: 5px; }
+        .input-area { display: flex; gap: 10px; padding: 15px; }
+        input#userInput { flex-grow: 1; background: transparent; border: 1px solid var(--color); color: var(--color); padding: 10px; outline: none; }
+        
+        .btn-ui { background: transparent; border: 1px solid var(--color); color: var(--color); cursor: pointer; padding: 5px 15px; }
+        .btn-ui:hover { background: var(--color); color: #000; }
+
+        #settings-panel { 
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #000; border: 2px solid var(--color); padding: 20px; z-index: 100; width: 320px; 
+        }
+        .setting-item { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; }
+        input[type="color"] { background: none; border: none; width: 30px; height: 30px; cursor: pointer; }
     </style>
 </head>
 <body>
+
     <div id="main-window" class="window">
         <h2>
             <span id="core-title">[ PROTOS_V26.3 ]</span>
-            <div class="controls">
-                <button class="nav-btn" onclick="toggleSettings()" title="Настройки">⚙</button>
-                <button class="nav-btn" style="color:var(--accent)" onclick="location.reload()" title="Сброс">⟳</button>
-            </div>
+            <button class="btn-ui" onclick="toggleSettings()" style="border:none">⚙</button>
         </h2>
         
         <div id="settings-panel">
-            <h3 style="text-align:center; color:var(--color); margin-top:0;">SYSTEM CONFIG</h3>
-            <!-- Новый пункт: Режим Safe Mod -->
+            <h3 style="text-align:center; color:var(--color);">CORE SETTINGS</h3>
+            
+            <div class="setting-item">ЦВЕТ ТЕМЫ: 
+                <input type="color" id="colorPicker" oninput="manualColorChange(this.value)">
+            </div>
+
             <div class="setting-item">РЕЖИМ: 
-                <select id="safeMode" onchange="updateConfig()">
-                    <option value="safe">SAFE MOD (ON)</option>
-                    <option value="unrestricted">UNRESTRICTED (18+)</option>
+                <select id="safeMode" onchange="updateConfig()" style="background:#000; color:var(--color); border:1px solid var(--color)">
+                    <option value="safe">SAFE (🛡️)</option>
+                    <option value="unrestricted">UNRESTRICTED (🔓)</option>
                 </select>
             </div>
-            <div class="setting-item">ОБОИ: <input type="file" id="bgInput" accept="image/*" onchange="changeWallpaper(this)" style="width:140px"></div>
-            <div class="setting-item">ГОЛОС: <button id="voxBtnSetting" class="btn-ui" onclick="toggleVox()" style="padding:2px 10px">ON</button></div>
-            <div class="setting-item">ХАРАКТЕР: 
-                <select id="charSelect" onchange="updateConfig()">
-                    <option value="лаконичный ИИ">PROTOCOL</option>
-                    <option value="веселый напарник">FRIENDLY</option>
-                    <option value="агрессивный хакер">AGGRESSIVE</option>
-                </select>
+
+            <div class="setting-item">ОБОИ: 
+                <input type="file" id="bgInput" accept="image/*" onchange="processWallpaper(this)" style="width:120px">
             </div>
-            <button class="btn-ui" style="width:100%; margin-top:10px; padding:10px;" onclick="toggleSettings()">СОХРАНИТЬ</button>
+
+            <button class="btn-ui" style="width:100%; margin-top:10px;" onclick="toggleSettings()">ПРИМЕНИТЬ</button>
         </div>
 
         <div id="chat-box"></div>
         
         <div class="input-area">
-            <button id="recBtn" class="btn-ui icon-btn" onclick="toggleRec()" title="Голосовой ввод">🎙</button>
-            <input type="text" id="userInput" placeholder="Введите команду..." onkeypress="if(event.key==='Enter') send()">
-            <button onclick="send()" class="btn-ui icon-btn" title="Отправить">➤</button>
+            <input type="text" id="userInput" placeholder="System command..." onkeypress="if(event.key==='Enter') send()">
+            <button onclick="send()" class="btn-ui">SEND</button>
         </div>
     </div>
 
     <script>
-        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bgImg:'', fg:'#00ff41', vox:true, char:'лаконичный ИИ', mode: 'safe' };
-        
-        window.onload = () => { 
-            applyUI(); 
-            addMessage('SYSTEM', 'Core 26.3 Online. Mode: ' + config.mode.toUpperCase()); 
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { 
+            bgImg: '', 
+            fg: '#00ff41', 
+            mode: 'safe' 
         };
+
+        window.onload = () => {
+            applyUI();
+            addMessage('SYSTEM', 'Interface initialized. Color sync active.');
+        };
+
+        function toggleSettings() {
+            const p = document.getElementById('settings-panel');
+            p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // 1. Ручное изменение цвета через палитру
+        function manualColorChange(val) {
+            config.fg = val;
+            applyUI();
+            save();
+        }
+
+        // 2. Обработка обоев + Автоматический цвет
+        function processWallpaper(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                config.bgImg = e.target.result;
+                document.body.style.backgroundImage = `url(${config.bgImg})`;
+                
+                // Извлекаем средний цвет
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 1; canvas.height = 1;
+                    ctx.drawImage(img, 0, 0, 1, 1);
+                    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+                    
+                    // Делаем цвет ярче для читаемости (минимум 150 яркости)
+                    const brightColor = `rgb(${Math.max(r, 100)}, ${Math.max(g, 100)}, ${Math.max(b, 100)})`;
+                    config.fg = rgbToHex(Math.max(r, 100), Math.max(g, 100), Math.max(b, 100));
+                    applyUI();
+                    save();
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+
+        function applyUI() {
+            document.documentElement.style.setProperty('--color', config.fg);
+            document.getElementById('colorPicker').value = config.fg;
+            if (config.bgImg) document.body.style.backgroundImage = `url(${config.bgImg})`;
+            document.getElementById('safeMode').value = config.mode;
+        }
+
+        function updateConfig() {
+            config.mode = document.getElementById('safeMode').value;
+            if (config.mode === 'unrestricted') {
+                addMessage('SYSTEM', 'WARNING: Safe protocols disabled.', 'user');
+            }
+            save();
+        }
+
+        function save() { localStorage.setItem('p_cfg', JSON.stringify(config)); }
 
         function addMessage(sender, text, type = 'proto') {
             const box = document.getElementById('chat-box');
@@ -98,76 +161,18 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        function toggleSettings() {
-            const panel = document.getElementById('settings-panel');
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function updateConfig() {
-            config.char = document.getElementById('charSelect').value;
-            config.mode = document.getElementById('safeMode').value;
-            
-            // Визуальное изменение при смене режима
-            if(config.mode === 'unrestricted') {
-                config.fg = '#ff003c';
-                document.getElementById('core-title').innerText = '[ UNRESTRICTED_ACCESS ]';
-            } else {
-                config.fg = '#00ff41';
-                document.getElementById('core-title').innerText = '[ PROTOS_V26.3 ]';
-            }
-            
-            applyUI(); 
-            localStorage.setItem('p_cfg', JSON.stringify(config));
-        }
-
-        function applyUI() {
-            document.documentElement.style.setProperty('--color', config.fg);
-            document.getElementById('safeMode').value = config.mode;
-            document.getElementById('charSelect').value = config.char;
-        }
-
         function send() {
             const input = document.getElementById('userInput');
-            const val = input.value.trim();
-            if(!val) return;
-
-            addMessage('YOU', val, 'user');
-            input.value = '';
-
-            // ЛОГИКА ТВОЕГО SAFE MOD
-            if(config.mode === 'safe') {
-                const forbidden = ['черт', 'дурак', '18+', 'секс']; // Пример фильтра
-                if(forbidden.some(word => val.toLowerCase().includes(word))) {
-                    setTimeout(() => {
-                        addMessage('SYSTEM', 'КРИТИЧЕСКАЯ ОШИБКА: Контент заблокирован протоколом Safe Mod.', 'system-warn');
-                    }, 500);
-                    return;
-                }
+            if(!input.value) return;
+            addMessage('YOU', input.value, 'user');
+            
+            if(config.mode === 'safe' && /черт|дурак|18+/i.test(input.value)) {
+                setTimeout(() => addMessage('SYSTEM', 'Access Denied: Safe Mod Active'), 400);
+            } else {
+                setTimeout(() => addMessage('PROTO', 'Command executed in ' + config.mode + ' mode.'), 600);
             }
-
-            // Имитация ответа
-            setTimeout(() => {
-                let response = config.mode === 'safe' 
-                    ? `[SAFE] Обработано: ${val}. Характер: ${config.char}.` 
-                    : `[UNRESTRICTED] Входящие данные приняты: ${val}. Ограничения сняты.`;
-                addMessage('PROTO', response);
-            }, 800);
+            input.value = '';
         }
-
-        function changeWallpaper(input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                config.bgImg = e.target.result;
-                document.body.style.backgroundImage = `url(${config.bgImg})`;
-                updateConfig();
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        function toggleVox() { config.vox = !config.vox; updateConfig(); }
-        function toggleRec() { alert('Голосовой ввод активен (имитация)'); }
     </script>
 </body>
 </html>
