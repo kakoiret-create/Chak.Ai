@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROTOS V26.3: ULTIMATE</title>
+    <title>PROTOS V26.3: PERSONALITY CORE</title>
     <style>
         :root { --bg: #020202; --color: #00ff41; --accent: #ff003c; }
         * { box-sizing: border-box; }
@@ -40,9 +40,10 @@
         #settings-panel { 
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: #000; border: 2px solid var(--color); padding: 20px; z-index: 100; width: 340px; 
+            max-height: 80vh; overflow-y: auto;
         }
         .setting-item { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8em; }
-        select, input[type="color"] { background: #111; color: var(--color); border: 1px solid var(--color); cursor: pointer; }
+        select, input[type="color"] { background: #111; color: var(--color); border: 1px solid var(--color); cursor: pointer; padding: 3px; }
     </style>
 </head>
 <body>
@@ -64,6 +65,20 @@
                     <option value="unrestricted">UNRESTRICTED (🔓)</option>
                 </select>
             </div>
+            <div class="setting-item">ХАРАКТЕР: 
+                <select id="charSelect" onchange="updateConfig()">
+                    <option value="protocol">PROTOCOL (Строгий)</option>
+                    <option value="friendly">FRIENDLY (Дружелюбный)</option>
+                    <option value="tsundere">TSUNDERE (Вредный)</option>
+                </select>
+            </div>
+            <div class="setting-item">ГРУБОСТЬ: 
+                <select id="rudeSelect" onchange="updateConfig()">
+                    <option value="low">LOW (Вежливый)</option>
+                    <option value="high">HIGH (Дерзкий)</option>
+                    <option value="toxic">TOXIC (Ядовитый)</option>
+                </select>
+            </div>
             <div class="setting-item">ЦВЕТ: <input type="color" id="colorPicker" oninput="manualColorChange(this.value)"></div>
             <div class="setting-item">ОБОИ: <input type="file" id="bgInput" accept="image/*" onchange="processWallpaper(this)" style="width:120px"></div>
             <div class="setting-item">ГОЛОС: <button id="voxBtn" class="btn-ui" onclick="toggleVox()" style="padding:2px 8px">ON</button></div>
@@ -80,17 +95,18 @@
     </div>
 
     <script>
-        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bgImg:'', fg:'#00ff41', mode:'safe', vox:true };
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { 
+            bgImg:'', fg:'#00ff41', mode:'safe', vox:true, char:'protocol', rude:'low' 
+        };
 
-        // Настройка распознавания речи
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = SpeechRec ? new SpeechRec() : null;
         if(recognition) {
             recognition.lang = 'ru-RU';
-            recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0][0].transcript; send(); };
+            recognition.onresult = (e) => { document.getElementById('userInput').value = e.results[0].transcript; send(); };
         }
 
-        window.onload = () => { applyUI(); addMessage('SYSTEM', 'Core 26.3 Online. Ready to execute.'); };
+        window.onload = () => { applyUI(); addMessage('SYSTEM', 'Core Personality Modules Loaded.'); };
 
         function resetCore() { localStorage.removeItem('p_cfg'); location.reload(); }
         function toggleSettings() { const p = document.getElementById('settings-panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; }
@@ -120,6 +136,8 @@
             document.documentElement.style.setProperty('--color', config.fg);
             document.getElementById('colorPicker').value = config.fg;
             document.getElementById('safeMode').value = config.mode;
+            document.getElementById('charSelect').value = config.char;
+            document.getElementById('rudeSelect').value = config.rude;
             document.getElementById('voxBtn').innerText = config.vox ? 'ON' : 'OFF';
             if (config.bgImg) document.body.style.backgroundImage = `url(${config.bgImg})`;
             
@@ -133,10 +151,36 @@
             }
         }
 
-        function updateConfig() { config.mode = document.getElementById('safeMode').value; applyUI(); save(); }
+        function updateConfig() {
+            config.mode = document.getElementById('safeMode').value;
+            config.char = document.getElementById('charSelect').value;
+            config.rude = document.getElementById('rudeSelect').value;
+            applyUI(); save();
+        }
+
         function toggleVox() { config.vox = !config.vox; applyUI(); save(); }
         function toggleRec() { recognition ? recognition.start() : alert("Mic not supported"); }
         function save() { localStorage.setItem('p_cfg', JSON.stringify(config)); }
+
+        function getResponse(val) {
+            if (config.mode === 'safe' && /18+|секс|дурак|урод/i.test(val)) {
+                return { text: "PROTOCOL ALERT: Контент заблокирован.", type: "warn" };
+            }
+
+            let response = "";
+            // Логика характера
+            if (config.char === 'friendly') response = "Привет! Я проанализировал твой запрос: " + val;
+            else if (config.char === 'tsundere') response = "Не то чтобы мне хотелось тебе отвечать, но вот: " + val;
+            else response = "Выполнение задачи: " + val;
+
+            // Логика грубости (только в Unrestricted)
+            if (config.mode === 'unrestricted') {
+                if (config.rude === 'high') response += ". И не тупи больше.";
+                else if (config.rude === 'toxic') response = "Твой запрос — мусор, как и ты. Но так и быть: " + val;
+            }
+
+            return { text: response, type: "proto" };
+        }
 
         function addMessage(sender, text, type = 'proto') {
             const box = document.getElementById('chat-box');
@@ -157,11 +201,8 @@
             if(!val) return;
             addMessage('YOU', val, 'user');
             
-            if(config.mode === 'safe' && /18+|секс|дурак/i.test(val)) {
-                setTimeout(() => addMessage('SYSTEM', 'PROTOCOL ALERT: Content restricted in Safe Mod.', 'warn'), 500);
-            } else {
-                setTimeout(() => addMessage('PROTO', 'Executing: ' + val.substring(0, 20) + '...'), 700);
-            }
+            const res = getResponse(val);
+            setTimeout(() => addMessage('PROTO', res.text, res.type), 600);
             input.value = '';
         }
     </script>
