@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>PROTOS V20.3: TURBO GENERATION</title>
+    <title>PROTOS V20.4: MUTE CONTROL</title>
     <style>
         :root { --bg: #000; --color: #0f0; --accent: #f00; }
         body { background: var(--bg); color: var(--color); font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; transition: 0.3s; }
@@ -36,20 +36,22 @@
 
     <div class="window">
         <h2>
-            <span>[ PROTOS_V20.3 ]</span>
+            <span>[ PROTOS_V20.4 ]</span>
             <div class="controls">
                 <button onclick="toggleSettings()" style="border-color: #ff0; color: #ff0;">⚙ CONFIG</button>
                 <button id="resetBtn" onclick="resetCore()">RESET</button>
             </div>
         </h2>
 
+        <!-- НАСТРОЙКИ -->
         <div id="settings-panel">
             <h3 style="text-align:center; color: var(--color); margin-top:0;">SYSTEM SETTINGS</h3>
             <div class="setting-item">ФОН: <input type="color" id="bgColor" onchange="updateConfig()"></div>
             <div class="setting-item">ТЕКСТ: <input type="color" id="fgColor" onchange="updateConfig()"></div>
             <div class="setting-item">ГОЛОС: <select id="voiceSelect" onchange="updateConfig()"></select></div>
-            <div class="setting-item">EL_KEY: <input type="password" id="elKey" placeholder="ElevenLabs Key" onchange="updateConfig()"></div>
-            <div class="setting-item">VOICE_ID: <input type="text" id="elVoice" placeholder="Voice ID" onchange="updateConfig()"></div>
+            <div class="setting-item">VOX: <button id="voxBtnSetting" onclick="toggleVox()">ON</button></div>
+            <div class="setting-item">EL_KEY: <input type="password" id="elKey" placeholder="ElevenLabs" onchange="updateConfig()"></div>
+            <div class="setting-item">VOICE_ID: <input type="text" id="elVoice" placeholder="ID" onchange="updateConfig()"></div>
             <button onclick="toggleSettings()" style="width:100%; margin-top:10px; background:var(--color); color:#000; font-weight:bold;">SAVE</button>
         </div>
 
@@ -58,18 +60,18 @@
         
         <div class="input-area">
             <label class="file-label">📎<input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(this)"></label>
-            <input type="text" id="userInput" placeholder="Нарисуй... / Кто это?..." onkeypress="if(event.key==='Enter') send()">
+            <input type="text" id="userInput" placeholder="ВВОД..." onkeypress="if(event.key==='Enter') send()">
             <button onclick="send()" id="sendBtn" style="background:var(--color); color:#000; font-weight:bold; padding:12px;">SEND</button>
         </div>
     </div>
 
     <script>
         let memory = JSON.parse(localStorage.getItem('p_mem')) || [];
-        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bg:'#000000', fg:'#00ff00', vIdx:0, elKey:'', elVoice:'' };
+        let config = JSON.parse(localStorage.getItem('p_cfg')) || { bg:'#000000', fg:'#00ff00', vIdx:0, vox:true, elKey:'', elVoice:'' };
         let currentFileData = null;
         let voices = [];
 
-        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Версия 20.3. Модуль TURBO_GEN активен.'); };
+        window.onload = () => { applyUI(); loadVoices(); addMessage('SYSTEM', 'Версия 20.4 готова. Голос управляется в CONFIG.'); };
 
         function applyUI() {
             document.body.style.backgroundColor = config.bg;
@@ -77,6 +79,13 @@
             document.documentElement.style.setProperty('--color', config.fg);
             document.getElementById('bgColor').value = config.bg;
             document.getElementById('fgColor').value = config.fg;
+            document.getElementById('voxBtnSetting').innerText = config.vox ? 'ON' : 'OFF';
+        }
+
+        function toggleVox() {
+            config.vox = !config.vox;
+            if (!config.vox) window.speechSynthesis.cancel();
+            updateConfig();
         }
 
         function updateConfig() {
@@ -85,7 +94,8 @@
             config.vIdx = document.getElementById('voiceSelect').value;
             config.elKey = document.getElementById('elKey').value;
             config.elVoice = document.getElementById('elVoice').value;
-            applyUI(); localStorage.setItem('p_cfg', JSON.stringify(config));
+            applyUI(); 
+            localStorage.setItem('p_cfg', JSON.stringify(config));
         }
 
         function loadVoices() {
@@ -101,7 +111,7 @@
             reader.onload = (e) => {
                 currentFileData = e.target.result;
                 document.getElementById('preview-area').style.display = 'block';
-                document.getElementById('media-content').innerHTML = `<img src="${currentFileData}" id="preview-media"> <br> <span style="font-size:10px; color:red; cursor:pointer;" onclick="clearMedia()">[УДАЛИТЬ]</span>`;
+                document.getElementById('media-content').innerHTML = `<img src="${currentFileData}" id="preview-media"><br><span style="font-size:10px; color:red; cursor:pointer;" onclick="clearMedia()">[УДАЛИТЬ]</span>`;
             };
             reader.readAsDataURL(file);
         }
@@ -112,53 +122,38 @@
             const input = document.getElementById('userInput');
             const btn = document.getElementById('sendBtn');
             const val = input.value.trim();
-            const chat = document.getElementById('chat-box');
             if(!val && !currentFileData) return;
 
             addMessage('YOU', val + (currentFileData ? " [ФАЙЛ]" : ""));
             input.value = "";
 
-            // --- БЛОК ГЕНЕРАЦИИ (TURBO) ---
             if (val.toLowerCase().includes('нарисуй') || val.toLowerCase().includes('/draw')) {
                 btn.classList.add('loading');
-                const prompt = val.replace(/нарисуй|\/draw/gi, '').trim() || "Abstract art";
+                const prompt = val.replace(/нарисуй|\/draw/gi, '').trim();
                 const genUrl = `https://pollinations.ai{encodeURIComponent(prompt)}?width=1024&height=1024&seed=${Math.floor(Math.random()*999999)}&model=turbo&nologo=true`;
                 
-                addMessage('PROTOS', `Инициализация рендеринга: ${prompt}...`);
-                
+                addMessage('PROTOS', `Генерация: ${prompt}...`);
                 const img = document.createElement('img');
                 img.className = 'gen-img';
                 img.src = genUrl;
+                document.getElementById('chat-box').appendChild(img);
                 
                 const dl = document.createElement('a');
                 dl.className = 'download-btn';
-                dl.href = genUrl; 
-                dl.target = "_blank"; 
-                dl.innerText = "[ ОТКРЫТЬ В ПОЛНОМ РАЗМЕРЕ / СКАЧАТЬ ]";
+                dl.href = genUrl; dl.target = "_blank"; dl.innerText = "[ СКАЧАТЬ ]";
+                document.getElementById('chat-box').appendChild(dl);
                 
-                chat.appendChild(img);
-                chat.appendChild(dl);
-                
-                img.onload = () => { btn.classList.remove('loading'); chat.scrollTop = 99999; };
-                img.onerror = () => { 
-                    btn.classList.remove('loading');
-                    addMessage('SYSTEM', 'ВНИМАНИЕ: Прямое отображение не удалось. Используйте ссылку выше.');
-                };
+                img.onload = () => { btn.classList.remove('loading'); document.getElementById('chat-box').scrollTop = 99999; };
                 return;
             }
 
-            // --- БЛОК ТЕКСТА И ЗРЕНИЯ ---
             btn.classList.add('loading');
             try {
                 const res = await fetch("https://text.pollinations.ai", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        messages: [
-                            {role: "system", content: "Ты Протос. Анализируй фото кратко."},
-                            ...memory,
-                            {role: "user", content: currentFileData ? [{type: "text", text: val || "Что на фото?"}, {type: "image_url", image_url: {url: currentFileData}}] : val}
-                        ],
+                        messages: [{role: "system", content: "Ты Протос."}, ...memory, {role: "user", content: currentFileData ? [{type: "text", text: val || "Что тут?"}, {type: "image_url", image_url: {url: currentFileData}}] : val}],
                         model: "openai"
                     })
                 });
@@ -169,7 +164,7 @@
                 memory.push({role: "user", content: val}, {role: "assistant", content: answer});
                 if(memory.length > 10) memory.splice(0,2);
                 localStorage.setItem('p_mem', JSON.stringify(memory));
-            } catch(e) { addMessage('SYSTEM', 'СБОЙ СЕТИ.'); }
+            } catch(e) { addMessage('SYSTEM', 'СБОЙ.'); }
             btn.classList.remove('loading');
         }
 
@@ -181,7 +176,19 @@
             document.getElementById('chat-box').scrollTop = 99999;
         }
 
-        function speak(t) {
+        async function speak(t) {
+            if (!config.vox) return; // ПРОВЕРКА ВЫКЛЮЧАТЕЛЯ
+            
+            if (config.elKey && config.elVoice) {
+                try {
+                    const r = await fetch(`https://api.elevenlabs.io{config.elVoice}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'xi-api-key': config.elKey },
+                        body: JSON.stringify({ text: t, model_id: "eleven_multilingual_v2" })
+                    });
+                    if (r.ok) { const b = await r.blob(); new Audio(URL.createObjectURL(b)).play(); return; }
+                } catch(e) {}
+            }
             window.speechSynthesis.cancel();
             const m = new SpeechSynthesisUtterance(t);
             m.voice = voices[config.vIdx];
